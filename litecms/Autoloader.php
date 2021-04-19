@@ -3,7 +3,9 @@
 namespace litecms;
 
 # Settings
-require_once 'Settings.php';
+include 'settings.php';
+# Assets
+include 'assets.php';
 
 # Autoloader
 spl_autoload_register(function ($class) {

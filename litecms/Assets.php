@@ -2,12 +2,15 @@
 
 namespace litecms;
 
-class Assets
-{
-	public static function debug ($data = "Hello world!") {
-		if (DEBUG == true)
-			echo "<pre>", var_dump($data), "</pre>";
-	}
+function debug ($data) {
+	if (!DEBUG)
+		return;
+
+	echo "<pre>", var_dump($data), "</pre>";
+}
+
+function path ($path) {
+	return $_SERVER['DOCUMENT_ROOT'] . DIRS[$path] ;
 }
 
 
