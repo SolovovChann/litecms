@@ -14,9 +14,10 @@ const PROJECT_SETTINGS = [
 	]
 ];
 
-# Use with $_BASE_DIR
+# Use with $_SERVER['DOCUMENT_ROOT']
 const DIRS = [
-	'litecms' => '/litecms',
+	'root' => '/litecms',
+	'static' => '/static',
 	'core' => '/litecms/core',
 	'components' => '/litecms/components',
 	'templates' => '/litecms/templates',
