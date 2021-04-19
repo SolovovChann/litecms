@@ -7,7 +7,6 @@ class Application
 	public $name;	# Example project
 	public $url;	# www.example.com
 	public $pages; # Array of pages included
-	public $db_prefix; # All DB tables will start's with
 
 	private $connection; # Connection to DB
 	

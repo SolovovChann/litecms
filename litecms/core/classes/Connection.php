@@ -5,6 +5,7 @@ namespace litecms\core\classes;
 class Connection
 {
 	private $link;
+	public $db_prefix; # All DB tables will start's with
 
 	public function __construct () {
 		$this->link = new mysqli(
