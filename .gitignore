@@ -1,1 +1,6 @@
-/test
+/apps/test/
+/filesystem.txt
+/workspace.code-workspace
+/templates
+/static
+.htaccess
