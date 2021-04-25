@@ -1,25 +1,26 @@
 <?php
 
-namespace litecms;
+// Include settings and assets
+include 'config/config.php';
+include 'assets/assets.php';
 
-# Settings
-include 'settings.php';
-# Assets
-include 'assets.php';
+// Class autoloader
+spl_autoload_register (function ($class) {
+    $prefix = 'Litecms';
+    $baseDir = __DIR__;
 
-# Autoloader
-spl_autoload_register(function ($class) {
-	$prefix = 'litecms\\core\\';
-	$base_dir = __DIR__ . DIRS['core'];
+    $len = strlen ($prefix);
+    if (strncmp ($prefix, $class, $len) !== 0) {
+        return;
+    }
 
-	$len = strlen($prefix);
-	if (strncmp($prefix, $class, $len) !== 0)
-		return;
+    $relClass = substr ($class, $len);
+    $file = realpath ($baseDir . '/' . $relClass . '.php');
 
-	$relative_class = substr($class, $len);
-	$file = $base_dir . str_replace('\\', '/', $relative_class) . '.php';
+    if (!$file) {
+        return;
+    }
 
-	if (file_exists($file)) {
-		require $file;
-	}
+    require_once $file;
 });
+
