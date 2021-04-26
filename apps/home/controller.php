@@ -1,17 +1,19 @@
 <?php
 
 require_once 'view.php';
+require_once 'model.php';
 
 use Litecms\Core\Models\Controller;
 
 class home_controller extends Controller 
 {
 	public function default () {
-		$this->view = new home_view ();
-		echo $this->view->render ('home.php', []);
+		$this->view = new index_view ();
+		echo $this->view->render ('home.php', ['title' => 'Homepage', 'message' => 'Hello world!']);
 	}
 
 	public function test () {
-		echo "Home test action";
+		$this->view = new index_view ();
+		echo $this->view->render ('home.php', ['title' => 'Homepage but test', 'message' => 'Hello world!']);
 	}
 }
