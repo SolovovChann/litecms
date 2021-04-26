@@ -4,25 +4,22 @@ namespace Litecms\Core\Models;
 
 use function Litecms\Assets\path;
 use const Litecms\Config\Directories as Dirs;
-use const Litecms\Config\ProjectSettings as Settings;
 
 class View
 {
-    private $context = [
-        'site' => [
-            'name' => Settings['name'],
-            'url' => Settings['url'],
-        ],
-    ];
-
-    public function render ($template, $context) {
+    static public function render ($template, $context) {
         $file = path (Dirs['templates'], $template);
 
         if (!$file) {
             return "Can't find template '$template'";
         }
 
-        $context = array_merge ($this->context, $context);
+        $defaultContext = [
+            'app' => new Application (),
+            'page' => new Page (),
+        ];
+
+        $context = array_merge ($defaultContext, $context);
         extract ($context, EXTR_SKIP);
 
         ob_start ();

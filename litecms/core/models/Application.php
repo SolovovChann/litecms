@@ -1,9 +1,12 @@
 <?php
 
-namespace Litecms;
+namespace Litecms\Core\Models;
 
-class Application
+use Litecms\Core\Models\Model;
+use const Litecms\Config\ProjectSettings as Config;
+
+class Application extends Model
 {
-    public $name;
-    public $url;
+    public $name = Config['name'];
+    public $url = Config['url'];
 }

@@ -44,6 +44,10 @@ const Urlpatterns = [
         'controller' => Directories['apps'] . '/home/controller.php',
         'class' => 'home_controller',
     ],
+    'test' => [
+        'controller' => Directories['apps'] . '/test/controller.php',
+        'class' => 'test_controller',
+    ],
     '404' => [
         'controller' => 'litecms/core/urls/404/controller.php',
         'class' => 'page404_controller',
