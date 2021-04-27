@@ -7,7 +7,7 @@ namespace Litecms\Assets;
  * 
  * Function echo <pre> tag than in foreach loop
  * Walkthrough the $data array and put in in
- * var_dump function. Works ONLY when Litecms\Config\Debug
+ * print_r function. Works ONLY when Litecms\Config\Debug
  * is TRUE.
  * 
  * @param array $data Array of data
@@ -21,7 +21,7 @@ function debug (...$data) {
     echo "<pre>";
 
     foreach ($data as $item) {
-        var_dump ($item);
+        print_r ($item);
     }
 
     echo "</pre>";
@@ -34,13 +34,21 @@ function debug (...$data) {
  * $_SERVER['DOCUMENT_ROOT'] variable
  *  
  * 
- * @param array $path Array of strings, that 
+ * @param array $path Array of strings, that will be merget to one path
+ * 
  * @return string|bool
  */
 function path (...$path) {
     return realpath ($_SERVER['DOCUMENT_ROOT'] . '/' . implode ('/', $path));
 }
 
+/**
+ * Check variable in associative array
+ * @param mixed $needle - What to search
+ * @param array $haystack - Where to search
+ * 
+ * @return bool
+ */
 function in_assoc ($needle, $haystack) {
     return !empty ($haystack[$needle]) ? true : false;
 }

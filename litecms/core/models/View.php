@@ -16,7 +16,7 @@ class View
 
         $defaultContext = [
             'app' => new Application (),
-            'page' => new Page (),
+            'page' => new Page ($_SERVER['REQUEST_URI']),
         ];
 
         $context = array_merge ($defaultContext, $context);

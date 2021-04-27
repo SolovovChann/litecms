@@ -1,3 +1,11 @@
+<?php
+
+use function Litecms\Assets\debug;
+
+$link = new \Litecms\Core\Models\Connection;
+
+?>
+
 <? include_once 'components/head.php'; ?>
 
 <div>
@@ -9,6 +17,9 @@
 			<? endforeach; ?>
 		</ol>
 	<? else: ?>
-		Вы не ввели ни одного аргумента. Перейдите на URL /test/test/ и впишите аргументы в адресную строку используя '/' для разделения.
+		Вы не ввели ни одного аргумента. Перейдите на URL <a href="/test/test/">/test/test/</a> и впишите аргументы в адресную строку используя '/' для разделения.
 	<? endif; ?>
+
+	<? debug ($app); ?>
+
 </div>

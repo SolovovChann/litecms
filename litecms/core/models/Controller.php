@@ -6,8 +6,9 @@ use Litecms\Core\Models\Page;
 
 class Controller
 {
-	public function __construct () {
-		$url = $_SERVER['REQUEST_URI'];
-		$this->page = new Page ();
-	}
+    private $page;
+    
+    public function __construct () {
+        $this->page = new Page ($_SERVER['REQUEST_URI']);
+    }
 }
