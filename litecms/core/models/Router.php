@@ -37,10 +37,16 @@ class Router extends Model
     }
 
     static function throw404 ($message) {
-        $host = 'http://'.$_SERVER['HTTP_HOST'].'/';
+        $redirect = 'http://'.$_SERVER['HTTP_HOST'].'/404';
         header ('HTTP/1.1 404 Not Found');
 		header ("Status: 404 Not Found");
-		header ('Location: /404?msg='.$message);
+        
+        // Trace debug information if Debug is true
+        if (\Litecms\Config\Debug === true) {
+            $redirect .= '?msg='.$message;
+        }
+
+        header ($redirect);
     }
 
     static function getController ($name) {

@@ -1,0 +1,1 @@
+console.log ('%cJavaScript is on!', 'font-weight: bold; color: yellow;')

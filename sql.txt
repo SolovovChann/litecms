@@ -1,0 +1,2 @@
+Страницы:
+CREATE TABLE `litecms`.`lcms_pages` ( `id` INT(15) NOT NULL AUTO_INCREMENT, `url` VARCHAR(255) NOT NULL, `title` VARCHAR(255) NOT NULL , `description` VARCHAR(255) NOT NULL , PRIMARY KEY (`id`)) ENGINE = InnoDB CHARSET=utf8 COLLATE utf8_general_ci;
