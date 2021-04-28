@@ -49,6 +49,23 @@ function path (...$path) {
  * 
  * @return bool
  */
-function in_assoc ($needle, $haystack) {
+function assocHas ($needle, $haystack) {
     return !empty ($haystack[$needle]) ? true : false;
+}
+
+/**
+ * Remove forward slashes in url
+ * 
+ * @param string $url
+ * @return string
+ */
+function pureUrl (string $url) {
+    $url = trim ($url, '/');
+
+    // Remove GET query from string
+    if (strpos ($url, '?') != false) {
+        $url = explode ('?', $url, 2)[0];
+    }
+
+    return $url;
 }

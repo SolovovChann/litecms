@@ -1,5 +1,7 @@
 <?php
 
+namespace Litecms\Apps\Test;
+
 require_once 'view.php';
 
 use Litecms\Core\Models\Controller;

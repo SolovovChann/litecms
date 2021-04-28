@@ -1,12 +1,9 @@
 <?php
 
 use function Litecms\Assets\debug;
-
-$link = new \Litecms\Core\Models\Connection;
+include_once 'components/head.php';
 
 ?>
-
-<? include_once 'components/head.php'; ?>
 
 <div>
 	<? if (!empty ($args)): ?>

@@ -2,13 +2,26 @@
 
 namespace Litecms\Core\Models;
 
-use const Litecms\Config\Urlpatterns as URLS;
+use const \Litecms\Config\Urlpatterns as URLS;
+use function \Litecms\Assets\assocHas;
+use function Litecms\Assets\pureUrl;
+use function \Litecms\Assets\path;
 
 class Router extends Model
 {
+    private static $routes = [];
+
+    public function add ($route, $handler) {
+        array_push (self::$routes, [
+            'route' => $route,
+            'handler' => $handler
+        ]);
+    }
+
     static public function start () {
         // Remove slashes from start and end
-        $url = trim ($_SERVER['REQUEST_URI'], '/');
+        $url = pureUrl ($_SERVER['REQUEST_URI']);
+        $method =  $_SERVER['REQUEST_METHOD'];
 
         // Ignore GET attributes
         if   (!empty ($_GET)) {
@@ -46,18 +59,18 @@ class Router extends Model
             $redirect .= '?msg='.$message;
         }
 
-        header ($redirect);
+        header ('Location: '.$redirect);
+        exit ();
     }
 
     static function getController ($name) {
-        $controller = URLS[$name] ?? null;
-
-        if ($controller === null) {
-            Router::throw404 ("Can't find controller $name '$controller'");
+        if (!assocHas ($name, URLS)) {
+            Router::throw404 ("Can't find controller '$name' in 'litecms/Config/Urlpatterns'");
             return;
         }
 
-        $path = \Litecms\Assets\path ($controller['controller']);
+        $controller = URLS[$name];
+        $path = path ($controller['controller']);
 
         if ($path === false) {
             Router::throw404 ("Controller '$name' not found");

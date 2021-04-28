@@ -3,6 +3,7 @@
 namespace Litecms\Core\Models;
 
 use Litecms\Core\Models\Connection;
+use function Litecms\Assets\pureUrl;
 
 class Page extends Model
 {
@@ -11,7 +12,7 @@ class Page extends Model
 
     public function __construct ($url) {
         // Trim url from slashes on start and end
-        $url = trim ($url, '/');
+        $url = pureUrl ($url);
 
         // Get page from DB by it's URL
         $link = new Connection ();

@@ -3,6 +3,7 @@
 namespace Litecms\Core\Models;
 
 use function Litecms\Assets\path;
+use function Litecms\Assets\pureUrl;
 use const Litecms\Config\Directories as Dirs;
 
 class View
@@ -16,7 +17,7 @@ class View
 
         $defaultContext = [
             'app' => new Application (),
-            'page' => new Page ($_SERVER['REQUEST_URI']),
+            'page' => new Page (pureUrl ($_SERVER['REQUEST_URI'])),
         ];
 
         $context = array_merge ($defaultContext, $context);

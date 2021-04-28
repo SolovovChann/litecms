@@ -5,6 +5,7 @@ namespace Litecms\Core\Models;
 use Litecms\Core\Models\Model;
 use const Litecms\Config\Connection as Config;
 use \mysqli;
+use \mysqli_result;
 
 class Connection extends Model
 {
@@ -32,7 +33,7 @@ class Connection extends Model
      * 
      * @return mysqli_result
      */
-    public function query ($query, ...$args) {
+    public function query (string $query, ...$args) {
         $query = vsprintf ($query, $args);
         $result = $this->link->query ($query);
 
@@ -48,7 +49,7 @@ class Connection extends Model
      * 
      * @return array
      */
-    public function select ($table, $query, $condition) {
+    public function select (string $table, string $query, string $condition) {
         $query = sprintf (
             "SELECT %s FROM %s WHERE %s", 
             $query,
@@ -62,18 +63,19 @@ class Connection extends Model
 
     /**
      * Input data into a table
+     * Use associatiive array to insert data into table where keys is columns
      * 
      * @param string $table
      * @param array $data
      * 
      * @return bool
      */
-    public function insert ($table, ...$data) {
+    public function insert (string $table, ...$data) {
         $query = sprintf (
             "INSERT INTO %s (`%s`) VALUES (\"%s\")",
             $this->prefix . $table,
-            implode('`, `',array_keys($data)),
-            implode('", "',array_values($data))
+            implode ('`, `', array_keys($data)),
+            implode ('", "', array_values($data))
         );
 
         $result = $this->query ($query);
@@ -87,7 +89,7 @@ class Connection extends Model
      * 
      * @return array
      */
-    static public function formatResult ($result) {
+    static public function formatResult (mysqli_result $result) {
         return ($result->num_rows > 1)
             ? $result->fetch_all (MYSQLI_ASSOC)
             : $result->fetch_array (MYSQLI_ASSOC);
