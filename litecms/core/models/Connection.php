@@ -11,9 +11,6 @@ class Connection
     protected $link;
     public $prefix;
     
-    /**
-     * Creates connection to database
-     */
     public function __construct () {
         $this->link = new mysqli (
             Config['host'],
@@ -22,6 +19,11 @@ class Connection
             Config['database']
         );
         $this->prefix = Config['table_prefix'];
+    }
+
+    public function __deconstruct () {
+        // Close connection
+        $this->close ();
     }
 
     /**

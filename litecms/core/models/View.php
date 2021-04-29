@@ -8,6 +8,12 @@ use const Litecms\Config\Directories as Dirs;
 
 class View
 {
+    /**
+     * Render template via context
+     * 
+     * @param string $template – name of template
+     * @param array $context – variables will be used in rendering
+     */
     static public function render ($template, $context = []) {
         $file = path (Dirs['templates'], $template);
 
@@ -17,7 +23,7 @@ class View
 
         $defaultContext = [
             'app' => new Application (),
-            'page' => new Page (pureUrl ($_SERVER['REQUEST_URI'])),
+            'page' => new Page (),
         ];
 
         $context = array_merge ($defaultContext, $context);
@@ -29,4 +35,5 @@ class View
         ob_end_clean ();
         return $render;
     }
+    
 }

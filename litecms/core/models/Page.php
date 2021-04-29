@@ -15,7 +15,15 @@ class Page extends Model
     public $url;
     public $title;
 
-    public function __construct ($url) {
+    public function __construct () {}
+
+    /**
+     * Find URL in DB
+     * 
+     * @param string $url 
+     * @return void
+     */
+    public function getUrl ($url) {
         // Trim url from slashes on start and end
         $url = pureUrl ($url);
 
@@ -37,8 +45,6 @@ class Page extends Model
         $this->url = $result['url'];
         $this->title = $result['title'];
         $this->description = $result['description'];
-
-        $link->close ();
     }
 
     /**
