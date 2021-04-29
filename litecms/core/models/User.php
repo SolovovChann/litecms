@@ -2,14 +2,18 @@
 
 namespace Litecms\Core\Models;
 
-use Model;
+use const Litecms\Config\DBPprefix;
 
 class User extends Model
 {
+	public static $database = DBPprefix . "users";
+	public static $verboseName = "Пользователь";
+	public static $verbosePlural = "Пользователи";
+
 	/**
 	 * 
 	 */
-	public function authorize () {}
+	public function auth () {}
 	/**
 	 * Logout user
 	 */

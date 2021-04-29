@@ -4,9 +4,14 @@ namespace Litecms\Core\Models;
 
 use Litecms\Core\Models\Connection;
 use function Litecms\Assets\pureUrl;
+use const Litecms\Config\DBPprefix;
 
 class Page extends Model
 {
+    public static $database = DBPprefix . "pages";
+	public static $verboseName = "Страница";
+	public static $verbosePlural = "Страницы";
+
     public $url;
     public $title;
 

@@ -3,11 +3,13 @@
 namespace Litecms\Core\Models;
 
 use const \Litecms\Config\Urlpatterns as URLS;
+use const Litecms\Config\Debug;
 use function \Litecms\Assets\assocHas;
 use function Litecms\Assets\pureUrl;
 use function \Litecms\Assets\path;
+use function \Litecms\Assets\debug;
 
-class Router extends Model
+class Router
 {
     private static $routes = [];
 
@@ -38,7 +40,7 @@ class Router extends Model
         $controller = Router::getController ($controllerName);
 
         if (!method_exists ($controller, $action)) {
-            Router::throw404 ("Method is not exists");
+            Router::throw404 ("Method '$action' is not exists");
         }
 
         // Try exec $action or throw 404
@@ -50,12 +52,15 @@ class Router extends Model
     }
 
     static function throw404 ($message) {
+        if (Debug == true) {
+            return;
+        }
         $redirect = 'http://'.$_SERVER['HTTP_HOST'].'/404';
         header ('HTTP/1.1 404 Not Found');
 		header ("Status: 404 Not Found");
         
         // Trace debug information if Debug is true
-        if (\Litecms\Config\Debug === true) {
+        if (Debug === true) {
             $redirect .= '?msg='.$message;
         }
 
@@ -79,8 +84,7 @@ class Router extends Model
         
         $class = $controller['class'];
 
-        
-        include_once $path;
+        include $path;
         return new $class;
     }
 }

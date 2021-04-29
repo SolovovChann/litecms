@@ -8,7 +8,7 @@ use const Litecms\Config\Directories as Dirs;
 
 class View
 {
-    static public function render ($template, $context) {
+    static public function render ($template, $context = []) {
         $file = path (Dirs['templates'], $template);
 
         if (!$file) {

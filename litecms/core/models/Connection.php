@@ -2,12 +2,11 @@
 
 namespace Litecms\Core\Models;
 
-use Litecms\Core\Models\Model;
 use const Litecms\Config\Connection as Config;
 use \mysqli;
 use \mysqli_result;
 
-class Connection extends Model
+class Connection
 {
     protected $link;
     public $prefix;
