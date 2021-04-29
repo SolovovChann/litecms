@@ -22,6 +22,7 @@ function debug (...$data) {
 
     foreach ($data as $item) {
         print_r ($item);
+        echo PHP_EOL;
     }
 
     echo "</pre>";

@@ -26,6 +26,8 @@ const Directories = [
     'templates' => 'templates',
 ];
 
+const DBPprefix = "lcms_";
+
 // Warning! Do not share your DB password
 const Connection = [
     'host' => 'localhost',
@@ -56,4 +58,9 @@ const Urlpatterns = [
         'controller' => 'litecms/core/urls/404/controller.php',
         'class' => 'page404_controller',
     ],
+];
+
+const Models = [
+    "Litecms\Core\Models\Page",
+    "Litecms\Core\Models\User",
 ];
