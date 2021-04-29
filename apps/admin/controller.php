@@ -27,11 +27,11 @@ class admin_controller extends Controller
     public function model (String $class)
     {
         $class = 'Litecms\Core\Models\\' . $class;
-        debug ($class, $model);
         $link = new Connection ();
+        $model = new $class ();
+        debug ($class, $model);
         // $result = $link->query ("SELECT * FROM %s WHERE 1", $class::$database);
         // $result = Connection::formatResult ($result);
-        // $link->close ();
 
         echo View::render ('admin-table.php', ['table' => $result]);
     }
