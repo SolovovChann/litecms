@@ -1,0 +1,6 @@
+templates/
+static/
+litecms/apps/
+litecms/config/routes.php
+litecms/config/connection.php
+.htaccess
