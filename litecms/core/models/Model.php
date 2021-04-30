@@ -8,6 +8,8 @@ class Model
     public static $verboseName;
     public static $verboseNamePlural;
 
+    /* Class static methods */
+    
     /**
      * Get all objects
      * Select all entrys from current table
@@ -25,7 +27,7 @@ class Model
      * 
      * @example MyModel::create (['name' => 'John', 'age' => 28, 'height' => 1.92]);
      * 
-     * @return Model
+     * @return self
      */
     static public function create (array $data) {}
     
