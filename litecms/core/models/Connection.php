@@ -2,6 +2,14 @@
 
 namespace Litecms\Core\Models;
 
+use const Litecms\Config\Connection\{
+    Host,
+    User,
+    Password,
+    Database,
+    TablePrefix
+};
+
 class Connection
 {
     private $link;
@@ -11,10 +19,10 @@ class Connection
      * Creates connection to database
      * Use PDO for create connection. Basicly it's a PDO wrapper 
      * 
-     * @return Connection
+     * @return self
      */
     public function __construct () {
-        $this->link = new PDO ("mysqli:litecms;host=localhost", "root", "root");
+        $this->connect ();
     }
     
     /**
@@ -36,7 +44,9 @@ class Connection
      * 
      * @return void
      */
-    static public function connect () {}
+    static public function connect () {
+        $this->link = new PDO (sprintf ("mysqli:%s;host=%s", Database, Host), User, Password);
+    }
     
     /**
      * Send query to database. Use vsprint function to cast vars
