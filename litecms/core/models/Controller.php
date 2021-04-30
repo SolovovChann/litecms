@@ -2,7 +2,10 @@
 
 namespace Litecms\Core\Models;
 
-class Controller
+abstract class Controller
 {
-    
+    /**
+     * Function Default need to be defined in child classes
+     */
+    abstract public function default ();
 }
