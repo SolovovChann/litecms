@@ -2,6 +2,10 @@
 
 namespace Litecms\Core\Models;
 
+use Litecms\Assets\Filesystem;
+use Litecms\Core\Models\Router;
+use const Litecms\Config\Project\Dirs;
+
 class View
 {
     /**
@@ -13,5 +17,23 @@ class View
      * 
      * @return string
     */
-    static public function render (string $template, array $context = []) {} 
+    static public function render (string $template, array $context = []) {
+        $file = Filesystem::path (Dirs['templates'], $template);
+
+        if (!$file) {
+            Router::throw404 ("Template '$template' not found"); 
+            return;
+        }
+
+        // Context variables is avalible as regular variables
+        extract ($context, EXTR_SKIP);
+
+        // Start buffering
+        ob_start ();
+        include $file;
+        $render = ob_get_contents ();
+        ob_end_clean ();
+
+        return $render;
+    } 
 }
