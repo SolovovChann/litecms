@@ -12,7 +12,7 @@ class Debug
      * 
      * @return void
     */
-    static public function debug (...$data) {
+    static public function print (...$data) {
         echo "<pre>";
     
         foreach ($data as $item) {
@@ -20,5 +20,9 @@ class Debug
         }
     
         echo "</pre>";
+    }
+
+    public function __invoke (...$data) {
+        Debug::print (...$data);
     }
 }

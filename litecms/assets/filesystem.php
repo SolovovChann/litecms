@@ -16,7 +16,7 @@ class Filesystem
      * 
      * @return string
     */
-    function path (...$path) {
-        return realpath ($_SERVER['DOCUMENT_ROOT'] . implode ('/', $path));
+    static public function path (...$path) {
+        return realpath ($_SERVER['DOCUMENT_ROOT'] . '/' . implode ('/', $path));
     }
 }

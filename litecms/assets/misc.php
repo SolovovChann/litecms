@@ -20,7 +20,8 @@ class Misc
     
     
     /**
-     * Remove slashes from the URL at the beginning and end of a line
+     * Get clean url
+     * Remove slashes from the URL at the beginning and end of a line and GET arguments
      * Optional: if split = true, returns array of url, splited by slash 
      * 
      * @example clear_url ('/home/apps/home/'); // Returned: home/apps/home
@@ -29,10 +30,14 @@ class Misc
      * @param string $url
      * @param bool $split
     */
-    static public function clear_url (string $url, ?bool $split) {
+    static public function clear_url (string $url, bool $split = false) {
+        // Remove slashes
         $url = trim ($url, '/');
+
+        // Remove GET arguments
+        $url = strtok ($url, '?');
     
-        return ($split == true)
+        return ($split === true)
         ? explode ('/', $url)
         : $url;
     }
