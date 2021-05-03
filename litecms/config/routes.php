@@ -1,4 +1,5 @@
 <?php
 
-namespace Litecms\Config;
+namespace Litecms\Config\Routes;
 
+use Litecms\Core\Models\Router;
