@@ -13,10 +13,10 @@ use const Litecms\Config\Connection\{
 class Connection
 {
     private $link;
-    public $prefix;
+    public $prefix = TablePrefix;
 
     /**
-     * Creates connection to database
+     * Create connection to database
      * Use PDO for create connection. Basicly it's a PDO wrapper 
      * 
      * @return self
@@ -37,15 +37,15 @@ class Connection
     
 
     /**
-     * Creates connection to database
-     * Use PDO for create connection. Basicly it's a PDO wrapper 
+     * Create connection to database
+     * Use mysqli class for create connection
      * 
-     * @example $link = Connection::connect ();
+     * @example $link = $link->connect ();
      * 
      * @return void
      */
-    static public function connect () {
-        $this->link = new PDO (sprintf ("mysqli:%s;host=%s", Database, Host), User, Password);
+    public function connect () {
+        $this->link = new \mysqli (Host, User, Password, Database);
     }
     
     /**
@@ -56,61 +56,80 @@ class Connection
      * @example $link->query ("SELECT * FROM `table` WHERE `id` = 5"); // You can call function without arguments
      * 
      * @param string $query – string to format
-     * @param array $values 
+     * @param array $values
      * 
      * @return array|bool
      */
-    public function query (string $query, ...$values) : mixed {
+    public function query (string $query, ...$values)  {
         if (!empty ($values)) {
-            $query = vsprintf ($query, $values);
+            $query = vsprintf ($query, ...$values);
         }
 
-        $this->link->prepare ($query);
-        $result = $this->link->execute ();
+        $result = $this->link->query ($query);
 
-        if (!$result or $result->rowCount == 0) {
+        if (!$result or $result->num_rows == 0) {
             return false;    
         }
 
-        return ($result->rowCount == 1)
-        ? $result->fetchCol
-        : $result->fetchAll (PDO::FETCH_ASSOC);
+        return ($result->num_rows == 1)
+        ? $result->fetch_array (MYSQLI_ASSOC)
+        : $result->fetch_all (MYSQLI_ASSOC);
     }
-    
+       
     /**
-     * Selects data from tabble uses condition
-     * Query to database like SELECT {select} FROM {table} WHERE {condition}
+     * Insert data into table
      * 
-     * @example Connection::select ('user', ['id', 'first_name', 'email'], ['name = John', 'id != 4']);
-     * 
-     * @param string $table
-     * @param string $select – array of selection paramethers
-     * @param array $condition
-     * 
-     * @return array
-     */
-    static public function select (string $table, array $select, $condition = "1") : array {}
-    
-    /**
-     * Inserts associative array of data into table
-     * 
-     * @example Conection::insert ('users', ['username' => 'John', 'email' => 'foobarbaz@yahoo.com']);
+     * @example $connection->insert ('users', ['username' => 'John', 'email' => 'foobarbaz@yahoo.com']);
      * 
      * @param string $table
      * @param array $data – associative array like 'field' => value
      * 
      * @return bool
      */
-    static public function insert (string $table, array $data) : bool {}
+    public function insert (string $table, array $data) : bool {
+        $result = $this->query ("INSERT INTO %s (`%s`) VALUES ('%s')", [
+            $table,
+            implode (', `', array_keys ($data)),
+            implode (', \'', array_values ($data)),
+        ]);
+
+        return $result;
+    }
+
+    /**
+     * Send query to database like SELECT <fields> FROM <table> WHERE <condition>
+     * 
+     * @example $link->select ("user", ['id', 'username'], "`name` = John AND `age > 18`");
+     * @example $link->select ("user", '*'); // Get all users from DB
+     * 
+     * @param string $table
+     * @param string|array $fields – selected fields
+     * @param string $condition
+     * 
+     * @return array|bool
+    */
+    public function select (string $table, $fields, string $condition = "1") {
+        if ($fields != '*') {
+            $fields = "('". implode (', \'', $fields) ."')";
+        }
+        
+        $result = $this->query ("SELECT %s FROM %s WHERE %s", [
+            $fields,
+            $this->prefix . $table,
+            $condition
+        ]);
+
+        return $result;
+    }
     
     /**
-     * Closes connection
+     * Close connection
      * 
-     * @example Connection::close ();
+     * @example $link->close ();
      * 
      * @return void
      */
-    static public function close () {
+    public function close () {
         unset ($this->link);
     }
     
