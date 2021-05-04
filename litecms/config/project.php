@@ -18,3 +18,7 @@ const Dirs = [
     'static' => 'static',
     'templates' => 'templates',
 ];
+
+// Register your models here
+const Applications = [
+];
