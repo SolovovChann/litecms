@@ -2,23 +2,19 @@
 
 namespace Litecms\Config\Project;
 
-
 // Warning! Disable on production
 const Debug = true;
 
-const Name = "Example project";
+const Name = "";
 
-// Register your models here 
-const Applications = [
-    'Litecms\Core\Models\Pages',
-];
+const Url = "";
 
-
-// Use with Litecms\Assets\Filesystem\Path function
 const Dirs = [
-    'litecms' => 'litecms/',
+    'root' => 'litecms',
     'core' => 'litecms/core',
-    'app' => 'litecms/apps/',
-    'templates' => 'templates/',
-    'static' => 'static/',
+    'content' => 'litecms/core/content',
+    
+    'apps' => 'apps',
+    'static' => 'static',
+    'templates' => 'templates',
 ];
