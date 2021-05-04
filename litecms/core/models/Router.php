@@ -3,6 +3,7 @@
 namespace Litecms\Core\Models;
 
 use Litecms\Assets\Misc;
+use Litecms\Core\Models\View;
 use Litecms\Assets\Debug;
 use const Litecms\Config\Project\Debug;
 
@@ -68,7 +69,6 @@ class Router
      * @param string $controller – controller's class 
      * 
      * @return void
-     * 
     */
     static public function addindex (string $controller)
     {
@@ -78,20 +78,32 @@ class Router
     /**
      * Redirect to default 404 page
      * 
+     * @example if (!file_exists ('apps/HomeController.php')) {
+     *     Router::throw404 ("Can't find controller");
+     * }
+     * 
      * @param string $message – message to user
      * 
      * @return void
      */
     static public function throw404 (string $message) {
-        // Redirect to /404
-        $host = 'http://'.$_SERVER['HTTP_HOST'].'/';
-        header ('HTTP/1.1 404 Not Found');
-		header ("Status: 404 Not Found");
+        // Print debug info
+        if (Debug === true) {
+            echo View::render ('404.php', [
+                'message' => $message,
+            ]);
+        } else {
+            // Redirect to /404
+            $host = 'http://'.$_SERVER['HTTP_HOST'].'/';
+            header ('HTTP/1.1 404 Not Found');
+            header ("Status: 404 Not Found");
+    
+            // If Debug is ON, send Message as GET argument
+            header ((Debug == true)
+                ? 'Location: /404?msg='.$message
+                : 'Location: /404' 
+            );
+        }
 
-        // If Debug is ON, send Message as GET argument
-        header ((Debug == true)
-            ? 'Location: /404?msg='.$message
-            : 'Location: /404' 
-        );
     }
 }
