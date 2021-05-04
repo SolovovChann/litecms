@@ -2,6 +2,8 @@
 
 namespace Litecms\Core\Models;
 
+use Litecms\Core\Models\Connection;
+
 class Model
 {
     public static $table;
@@ -18,7 +20,12 @@ class Model
      * 
      * @return array
      */
-    static public function all () {}
+    static public function all () {
+        $link = new Connection ();
+        $result = $link->select (static::$table, '*');
+
+        return $result;
+    }
     
     /**
      * Create object
@@ -65,12 +72,8 @@ class Model
      */
     static public function remove (...$condition) {}
 
-    
-    /**
-     * 
-     * Model object's methods
-     * 
-     */
+
+    /* Model object's methods */
 
 
     /**
