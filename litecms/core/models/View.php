@@ -20,7 +20,7 @@ class View
     static public function render (string $template, array $context = []) {
         $file = Filesystem::path (Dirs['templates'], $template);
 
-        if (!$file) {
+        if (!file_exists ($file)) {
             Router::throw404 ("Template '$template' not found"); 
             return;
         }
