@@ -3,6 +3,7 @@
 namespace Litecms\Core\Models;
 
 use Litecms\Core\Models\Connection;
+use const Litecms\Config\Connection\TablePrefix;
 
 class Model
 {
@@ -22,7 +23,8 @@ class Model
      */
     static public function all () {
         $link = new Connection ();
-        $result = $link->select (static::$table, '*');
+        $result = $link->select (static::$table);
+        $link->close ();
 
         return $result;
     }
@@ -42,36 +44,41 @@ class Model
      * Get all objects matching the condition
      * You can use few conditions, divided with coma 
      * 
-     * @example MyModel::filter ('id = 5', 'name = John')
+     * @example MyModel::filter ('name = John', 'age <= 18');
      * 
      * @param array $condition - array of strings used for filtering
      * 
      * @return void
      */
-    static public function filter (...$condition) {}
-    
-    /**
-     * Get object matching the condition
-     * Unlike filter function returns ony one (first found) object
-     * 
-     * @example MyModel::get ('id = 5', 'name = John');
-     * 
-     * @param array $condition – array of strings used for filtering
-     * 
-     * @return void
-     */
-    static public function get (...$condition) {}
-    
-    /**
-     * Removes selected object by 
-     * More description
-     * 
-     * @param array $condition – array of strings used for filtering
-     * 
-     * @return void
-     */
-    static public function remove (...$condition) {}
+    static public function filter (...$condition) {
+        $link = new Connection ();
+        $result = $link->select (static::$table, '*', $condition);
+        $link->close ();
 
+        return $result;
+    }
+    
+    /**
+     * Get object by ID
+     * If case of error, returns false
+     * 
+     * @example MyModel::get (5);
+     * 
+     * @param int $id 
+     * 
+     * @return object|null
+     */
+    static public function get (int $id) {
+        
+        $link = new Connection ();
+        $result = $link->getObject (
+            get_called_class (),
+            static::$table,
+            $id
+        );
+
+        return $result;
+    }    
 
     /* Model object's methods */
 
@@ -95,4 +102,17 @@ class Model
      * @return void
      */
     public function save () {}
+
+    /**
+     * Deletes selected object
+     * In case of error, returns false
+     * 
+     * @return void|bool
+     */
+    public function delete () {
+        $link = new Connection ();
+        $result = $link->delete (static::$table, ["id = " . $this->id]);
+
+        return $result;
+    }
 }
