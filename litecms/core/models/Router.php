@@ -76,6 +76,20 @@ class Router
     }
 
     /**
+     * Define controller responsible for the 404 page
+     * 
+     * @example Router::add404 ('Litecms\Apps\My404Controller');
+     * 
+     * @param string $controller – controller's class 
+     * 
+     * @return void
+    */
+    static public function add404 (string $controller)
+    {
+        self::$routes['404'] = $controller;
+    }
+
+    /**
      * Redirect to default 404 page
      * 
      * @example if (!file_exists ('apps/HomeController.php')) {
