@@ -2,3 +2,5 @@ templates/
 static/
 litecms/apps/
 .htaccess
+litecms/config/project.php
+litecms/config/routes.php

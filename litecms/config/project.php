@@ -5,9 +5,9 @@ namespace Litecms\Config\Project;
 // Warning! Disable on production
 const Debug = true;
 
-const Name = "";
+const Name = "Example Project";
 
-const Url = "";
+const Url = "litecms";
 
 const Dirs = [
     'root' => 'litecms',
@@ -21,4 +21,6 @@ const Dirs = [
 
 // Register your models here
 const Applications = [
+    'Litecms\Apps\Articles\Article',
+    'Litecms\Apps\Articles\Comment',
 ];
