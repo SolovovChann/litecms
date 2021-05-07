@@ -10,7 +10,6 @@ class Page extends Model
     public static $verboseName = 'Страница';
     public static $verboseNamePlural = 'Страницы';
 
-    public $id;
     public $url;
     public $title;
     public $description; 
