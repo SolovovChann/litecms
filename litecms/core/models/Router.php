@@ -4,7 +4,6 @@ namespace Litecms\Core\Models;
 
 use Litecms\Assets\Misc;
 use Litecms\Core\Models\View;
-use Litecms\Assets\Debug;
 use const Litecms\Config\Project\Debug;
 
 class Router
@@ -37,11 +36,11 @@ class Router
 
         $controller = new $controller;
 
-        // Try to pass arguments in function
+        // Try to pass arguments in function or throw 404
         try {
             $controller->$action (...$args);
         } catch (\ArgumentCountError $e) {
-            Router::throw404 ("Can't find function that expect " . count ($args) . " argument(s)");
+            Router::throw404 ("Can't find function '$action' that expect " . count ($args) . " argument(s)");
         }
     }
 
@@ -69,7 +68,7 @@ class Router
      * @param string $controller – controller's class 
      * 
      * @return void
-    */
+     */
     static public function addindex (string $controller)
     {
         self::$routes[''] = $controller;
@@ -83,7 +82,7 @@ class Router
      * @param string $controller – controller's class 
      * 
      * @return void
-    */
+     */
     static public function add404 (string $controller)
     {
         self::$routes['404'] = $controller;
@@ -107,17 +106,49 @@ class Router
                 'message' => $message,
             ]);
         } else {
-            // Redirect to /404
+            // Redirect to 404
             $host = 'http://'.$_SERVER['HTTP_HOST'].'/';
             header ('HTTP/1.1 404 Not Found');
             header ("Status: 404 Not Found");
-    
-            // If Debug is ON, send Message as GET argument
-            header ((Debug == true)
-                ? 'Location: /404?msg='.$message
-                : 'Location: /404' 
-            );
         }
 
+    }
+
+    /**
+     * Redirect using special entry like <controller>:<action>:<argument1>:<argument2>:...:<argumentN>
+     * Finds controller in Applications, and redirects to it's url
+     * 
+     * @example return Route::redirect ('articles');
+     * @example return Route::redirect ('articles:view:4') // 
+     * 
+     * @return void
+     */
+    public static function redirect (string $to)
+    {
+        // Get controller and action 
+        $split = explode (':', $to);
+        $controller = $split[0];
+        $action = $split[1] ?? '';
+        $args = array_slice ($split, 2);
+
+        foreach (self::$routes as $url => $route) {
+            // Get controller's class name
+            $cont = end (explode ('\\', $route));
+
+            // Igrone Index page just in case
+            if ($cont == $controller and !empty ($url)) {
+                // Add action if isset
+                $url .= (!empty ($action))
+                ? "/" . $action
+                : "";
+
+                // Add arguments if isset
+                $url .= (!empty ($args))
+                ? "/" . implode ('/', $args)
+                : "";
+
+                header ('Location: /'.$url); 
+            }
+        }
     }
 }
