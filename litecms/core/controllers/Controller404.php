@@ -1,6 +1,6 @@
 <?php
 
-namespace Litecms\Assets;
+namespace Litecms\Core\Controllers;
 
 use Litecms\Core\Models\Controller;
 use Litecms\Core\Models\View;
