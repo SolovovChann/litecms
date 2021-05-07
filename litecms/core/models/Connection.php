@@ -48,6 +48,24 @@ class Connection
         $this->link = new \mysqli (Host, User, Password, Database);
     }
 
+    public function pureQuery (string $query, ...$values){
+        $paramCount = count ($values);
+
+        $stmt = $this->link->prepare ($query) or die ($this->link->error);
+
+        if ($paramCount > 0) {
+            $stmt->bind_param (str_repeat ('s', $paramCount), ...$values);
+        }
+
+        $stmt->execute ();
+
+        $result = $stmt->get_result () or die ($this->link->error);
+
+        return ($result->num_rows == 1)
+        ? $result->fetch_array (MYSQLI_ASSOC)
+        : $result->fetch_all (MYSQLI_ASSOC);
+    }
+
     /**
      * Send query to database. Use vsprint function to cast vars
      * Returns associative array or false on failure
@@ -78,6 +96,10 @@ class Connection
 
     /**
      * Same function as Connection::query, but returns object of class
+     * You can get all entrys as objects, for that, pass -1 as id
+     * 
+     * @example $link->getObject ('Litecms\Apps\Articles\Article', 'articles_article', 5); // Get article with id = 6 and return as object
+     * @example $link->getObject ('Litecms\Apps\Articles\Article', 'articles_article', -1); // Get all articles
      * 
      * @param string $class - class to fetch
      * @param string $table – table, where get all data
@@ -86,6 +108,17 @@ class Connection
      * @return object|null
      */
     public function getObject (string $class, string $table, int $id) {
+        // If id = -1, return all object
+        if ($id == -1) {
+            $data = $this->link->query (sprintf ("SELECT * FROM %s WHERE 1", $this->prefix.$table));
+            $result = [];
+
+            while ($obj =  $data->fetch_object ()) {
+                $result[] = $obj;
+            }
+
+            return $result;
+        }
         $result = $this->link->query (sprintf ("SELECT * FROM %s WHERE `id` = %d LIMIT 1",
             $this->prefix.$table,
             $id
@@ -105,12 +138,15 @@ class Connection
      * 
      * @return bool
      */
-    public function insert (string $table, array $data) : bool {
-        $result = $this->query ("INSERT INTO %s (`%s`) VALUES ('%s')", [
-            $table,
-            implode (', `', array_keys ($data)),
-            implode (', \'', array_values ($data)),
-        ]);
+    public function insert (string $table, array $data) {
+        // Exclude all empty variables
+        $data = array_filter ($data);
+
+        $result = $this->query ("INSERT INTO %s (`%s`) VALUES ('%s')", 
+            $this->prefix.$table,
+            implode ("`, `", array_keys ($data)),
+            implode ("', '", array_values ($data))
+        );
 
         return $result;
     }
@@ -119,45 +155,63 @@ class Connection
      * Send query to database like SELECT <fields> FROM <table> WHERE <condition>
      * 
      * @example $link->select ("user"); // Get all entrys from DB
-     * @example $link->select ("user", ['id', 'username'], ["name = John", "age > 18"]); // Get ids and usernames all users, that meet the condition
+     * @example $link->select ("user", ['id', 'username'], ['name LIKE Jo%', 'email LIKE %@yahoo.com'], 10, 'email', true);
      * @example $link->select ("user", 'name', ["name=John", "age>18"]) // Error. Do not forget about spaces in condition
      * 
      * @param string $table
      * @param string|array $fields – selected fields
      * @param string|array $condition
+     * @param string $order – field to order result (id by default)
+     * @param bool $reverse – reverse result list or not
      * 
      * @return array|bool
      */
-    public function select (string $table, $fields = "*", $condition = "") {
-        \Litecms\Assets\Debug::print ();
-
+    public function select (string $table, $fields = "*", $condition = "", $limit = 50, string $order = 'id', bool $reverse = false) {
+        // Collapse all fields to one string
         if (gettype ($fields) == 'array') {
-            $fields = implode (', ', $fields);
+            $fields = implode ('`, `', $fields);
         }
 
-        $result = $this->query ("SELECT %s FROM %s WHERE %s",
+        $query = "SELECT `%s` FROM %s WHERE %s ORDER BY `%s` %s";
+
+        // Add limit if exists
+        if (!empty ($limit)) {
+            $query .= " LIMIT $limit";
+        }
+
+        // Set $reverse "DESC" or "ASC" value based on it's current value
+        $reverse = ($reverse === true)
+        ? "DESC"
+        : "ASC";
+
+        $result = $this->query ($query,
             $fields,
             $this->prefix . $table,
-            $this->regex ($condition)
+            $this->regex ($condition),
+            $order,
+            $reverse
         );
+
 
         return $result;
     }
 
     /**
      * Returns string like `field` = "value" 
-     * If array is empty, returns "1" string
+     * If array is empty, returns "1"
      * 
-     * @param array $input – array like ['id = 4', 'age > 12']
+     * @param $input – array like ['id = 4', 'age > 12']
      * 
      * @return string
      */
     private function regex ($input) {
         $output = "";
 
-        if (!empty ($input)) {
+        if (gettype ($input) == 'array' and !empty ($input)) {
+            $output = [];
+
             preg_match_all ("/(\S*)\s?(!=|<=|>=|<|>|=|LIKE)\s?(\S*)/", implode(' ', $input), $matches, PREG_SET_ORDER);
-            // It's bad practice, but i don't know better way :c
+            // It's bad practice, but I don't know better way :c
             foreach ($matches as $match) {
                 $output .= "`{$match[1]}` {$match[2]} \"{$match[3]}\" AND ";
             }
@@ -180,7 +234,7 @@ class Connection
      * @return bool
      */
     public function delete (string $table, array $condition) {
-        $result = $this->query ("DELETE FROM %s WHERE %s",
+        $result = $this->query ("DELETE FROM `%s` WHERE %s",
             $this->prefix.$table,
             $this->regex ($condition)
         );
@@ -196,6 +250,7 @@ class Connection
      * @return void
      */
     public function close () {
+        $this->link->close ();
         unset ($this->link);
     }
     
