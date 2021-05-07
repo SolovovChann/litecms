@@ -3,10 +3,11 @@
 namespace Litecms\Core\Models;
 
 use Litecms\Core\Models\Connection;
-use const Litecms\Config\Connection\TablePrefix;
 
 class Model
 {
+    public $id;
+    
     public static $table;
     public static $verboseName;
     public static $verboseNamePlural;
@@ -23,7 +24,7 @@ class Model
      */
     static public function all () {
         $link = new Connection ();
-        $result = $link->select (static::$table);
+        $result = $link->getObject (get_called_class (), static::$table, -1); // If pass -1 to getObject, it returns all entrys as objects
         $link->close ();
 
         return $result;
@@ -48,12 +49,11 @@ class Model
      * 
      * @param array $condition - array of strings used for filtering
      * 
-     * @return void
+     * @return array|bool
      */
     static public function filter (...$condition) {
         $link = new Connection ();
         $result = $link->select (static::$table, '*', $condition);
-        $link->close ();
 
         return $result;
     }
@@ -91,17 +91,72 @@ class Model
      * 
      * @return void
      */
-    public function set ($args) {}
+    public function set ($args) {
+        foreach ($args as $key => $value) {
+            $this->$key = $value;
+        }
+    }
     
     /**
-     * Save
-     * More description
+     * Saves model changes in database
+     * Also can be used for updating inforamtion
      * 
-     * @param
+     * @example
+     * $john = new Human ();
+     * $john->name = 'John';
+     * $john->age = 28;
+     * $john->height = 1.82;
+     * $john->save ();
+     * @example
+     * $john = Human::get (5); // Get human with id = 5
+     * $john->age += 1; // Yey, John celebrates his birthday! Congrats!
+     * $john->save (); // Save new John's age in db
+     * @example
+     * $john = Human::get (5);
+     * echo $john->name; // "John"
+     * $john->name = "John"; // Do not worry, the same information will not be overwritten
+     * $john->age += 1; // Saves only that part
+     * $john->save ();
      * 
      * @return void
      */
-    public function save () {}
+    public function save () {
+        $link = new Connection ();
+
+        if (!empty ($this->id)) {
+            // Get entry from db
+            $entry = static::get ($this->id);
+            
+            // Can't get entry from db
+            if (empty ($entry)) {
+                return false;
+            }
+
+            // Get object fields with values
+            $fields = get_object_vars ($this);
+            $changes = [];
+
+            // If object do not match with entry from db, write it down
+            foreach ($fields as $key => $value) {
+                if ($entry->$key != $value) {
+                    $changes[$key] = $value;
+                }
+            }
+
+            $query = "UPDATE %s SET %s WHERE `id` = %s";
+
+            // Transform assoc array to string like `key` = 'value', `key2` = 'value2' ... 
+            $insert = implode (', ', array_map (
+                function ($v, $k) { return sprintf ("`%s` = '%s'", $k, $v); },
+                $changes,
+                array_keys ($changes)
+            ));
+            
+            $link->query ($query, $link->prefix.static::$table, $insert, $this->id);
+        } else {
+            $link->insert (static::$table, get_object_vars ($this));
+        }
+    }
 
     /**
      * Deletes selected object
