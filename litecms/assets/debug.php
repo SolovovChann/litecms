@@ -2,7 +2,7 @@
 
 namespace Litecms\Assets;
 
-class Debug 
+abstract class Debug 
 {
     /**
      * Output data as debug info
@@ -20,9 +20,5 @@ class Debug
         }
     
         echo "</pre>";
-    }
-
-    public function __invoke (...$data) {
-        Debug::print (...$data);
     }
 }
