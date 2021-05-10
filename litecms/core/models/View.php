@@ -16,24 +16,26 @@ class View
      * @param array $context – array of variables, used in template
      * 
      * @return string
-    */
+     */
     static public function render (string $template, array $context = []) {
-        $file = Filesystem::path (Dirs['templates'], $template);
+        // Search all folders, set in config file
+        foreach (Dirs['templates'] as $folder) {
+            $file = Filesystem::path ($folder, $template);
 
-        if (!file_exists ($file)) {
-            Router::throw404 ("Template '$template' not found"); 
-            return;
+            if (file_exists ($file)) {               
+                // Context variables is avalible as regular variables
+                extract ($context, EXTR_SKIP);
+        
+                // Start buffering
+                ob_start ();
+                include $file;
+                $render = ob_get_contents ();
+                ob_end_clean ();
+        
+                return $render;
+            }
         }
 
-        // Context variables is avalible as regular variables
-        extract ($context, EXTR_SKIP);
-
-        // Start buffering
-        ob_start ();
-        include $file;
-        $render = ob_get_contents ();
-        ob_end_clean ();
-
-        return $render;
+        throw Router::throw404 ("Template '$template' is not exists");
     } 
 }
