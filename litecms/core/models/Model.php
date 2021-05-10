@@ -22,7 +22,7 @@ class Model
      * 
      * @return array
      */
-    static public function all () {
+    public static function all () {
         $link = new Connection ();
         $result = $link->getObject (get_called_class (), static::$table, -1); // If pass -1 to getObject, it returns all entrys as objects
         $link->close ();
@@ -30,16 +30,6 @@ class Model
         return $result;
     }
     
-    /**
-     * Create object
-     * 
-     * @param array $data – assoc array where key is field and value is value
-     * 
-     * @example MyModel::create (['name' => 'John', 'age' => 28, 'height' => 1.92]);
-     * 
-     * @return self
-     */
-    static public function create (array $data) {}
     
     /**
      * Get all objects matching the condition
@@ -51,7 +41,7 @@ class Model
      * 
      * @return array|bool
      */
-    static public function filter (...$condition) {
+    public static function filter (...$condition) {
         $link = new Connection ();
         $result = $link->select (static::$table, '*', $condition);
 
@@ -68,7 +58,7 @@ class Model
      * 
      * @return object|null
      */
-    static public function get (int $id) {
+    public static function get (int $id) {
         
         $link = new Connection ();
         $result = $link->getObject (
@@ -78,10 +68,15 @@ class Model
         );
 
         return $result;
-    }    
+    }
 
     /* Model object's methods */
 
+
+    public function __toString ()
+    {
+        return static::$verboseNamePlural;
+    }
 
     /**
      * Description
