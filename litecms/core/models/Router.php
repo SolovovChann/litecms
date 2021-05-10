@@ -100,18 +100,50 @@ class Router
      * @return void
      */
     static public function throw404 (string $message) {
-        // Print debug info
-        if (Debug === true) {
-            echo View::render ('404.php', [
-                'message' => $message,
-            ]);
-        } else {
-            // Redirect to 404
-            $host = 'http://'.$_SERVER['HTTP_HOST'].'/';
-            header ('HTTP/1.1 404 Not Found');
-            header ("Status: 404 Not Found");
-        }
+        // Redirect to 404
+        $host = 'http://'.$_SERVER['HTTP_HOST'].'/';
+        header ('HTTP/1.1 404 Not Found');
+        header ("Status: 404 Not Found");
+        header ('Location: '.Router::url ('Controller404'));
+    }
 
+    /**
+     * Get link by special entry like <controller>:<action>:<arguments>
+     * 
+     * @example echo Router::url ('articles:view:4');
+     * @example echo Router::url ('articles);
+     * 
+     * @return string
+     */
+    public static function url (string $to)
+    {
+        // Split input
+        $split = explode (':', $to);
+        $controller = $split[0];
+        $action = $split[1];
+        $args = array_slice ($split, 2);
+
+        foreach (self::$routes as $url => $route) {
+            $cont = end (explode ('\\', $route));
+            
+            if ($cont == $controller) {
+                // If call home controller with action
+                if ($url == '' and !empty ($action)) {
+                    continue;
+                }
+                // Add action if isset
+                $url .= (!empty ($action))
+                ? "/" . $action
+                : "";
+
+                // Add arguments if isset
+                $url .= (!empty ($args))
+                ? "/" . implode ('/', $args)
+                : "";
+
+                return '/'.$url;
+            }
+        }
     }
 
     /**
@@ -125,30 +157,7 @@ class Router
      */
     public static function redirect (string $to)
     {
-        // Get controller and action 
-        $split = explode (':', $to);
-        $controller = $split[0];
-        $action = $split[1] ?? '';
-        $args = array_slice ($split, 2);
-
-        foreach (self::$routes as $url => $route) {
-            // Get controller's class name
-            $cont = end (explode ('\\', $route));
-
-            // Igrone Index page just in case
-            if ($cont == $controller and !empty ($url)) {
-                // Add action if isset
-                $url .= (!empty ($action))
-                ? "/" . $action
-                : "";
-
-                // Add arguments if isset
-                $url .= (!empty ($args))
-                ? "/" . implode ('/', $args)
-                : "";
-
-                header ('Location: /'.$url); 
-            }
-        }
+        $url = static::url ($to);
+        header ('Location: '.$url);
     }
 }
