@@ -15,7 +15,7 @@ class Filesystem
      * @param array $data – array of strings
      * 
      * @return string
-    */
+     */
     static public function path (...$path) {
         $path = $_SERVER['DOCUMENT_ROOT'] . '/' . implode ('/', $path);
         return  $path;
@@ -46,7 +46,7 @@ class Filesystem
      * @param bool $force – allows the creation of nested directories specified in the path
      * 
      * @return void
-    */
+     */
     static public function new_dir (string $path, bool $force = false) {
         $path = Filesystem::path ($path);
         mkdir ($path, 0777, $force);
@@ -61,9 +61,28 @@ class Filesystem
      * @param string $file
      * 
      * @return string
-    */
+     */
     static public function get_extension ($file) {
         $ext = explode ('.', $file, 2);
+        if (count ($ext) != 2) {
+            return;
+        }
+        
         return end ($ext);
+    }
+
+    static public function walk (string $folder)
+    {
+        $fodler = Filesystem::path ($folder);
+
+        if (!is_dir ($folder)) {
+            // Not directory
+            return "'$folder' is not a directory";
+        }
+
+        $walk = scandir ($folder, 1);
+        $walk = array_diff ($walk, ['.', '..']); // Remove dots
+
+        return $walk;
     }
 }
