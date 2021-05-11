@@ -3,7 +3,7 @@
 namespace Litecms\Core\Models;
 
 use Litecms\Core\Models\Connection;
-use Litecms\Core\Models\Model;
+use Litecms\Core\Models\{Model, ORM};
 use const Litecms\Config\Project\TimeZone;
 
 class User extends Model
@@ -16,6 +16,21 @@ class User extends Model
     private $email;
     private $password; 
     public $groups;
+
+    public static function init ()
+    {
+        $username = ORM::varchar ();
+        $email = ORM::varchar ();
+        $password = ORM::varchar ();
+        $groups = ORM::varchar ();
+
+        return ORM::migrate (self::$table, [
+            'username' => $username,
+            'email' => $email,
+            'password' => $password,
+            'groups' => $groups
+        ]);
+    }
 
     /**
      * 

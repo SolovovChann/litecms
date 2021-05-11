@@ -2,7 +2,9 @@
 
 namespace Litecms\Core\Models;
 
-class Field
+use Litecms\Core\Models\Connection;
+
+class ORM
 {
     /**
      * Format null and default
@@ -12,9 +14,10 @@ class Field
      * 
      * @return string
      */
-    public static function postfix ($default = null, $nullable = false) {
-        $default = ($default === null)
-        ?: sprintf ("DEFAULT %s", $default);
+    private static function postfix ($default = null, $nullable = false) {
+        if ($default !== null) {
+            $default = sprintf ("DEFAULT %s", $default);
+        }
         
         $nullable = ($nullable === false)
         ? null
@@ -77,8 +80,22 @@ class Field
         return $result;
     }
 
+    public static function primary ()
+    {
+        $result = "int(15) NOT NULL AUTO_INCREMENT PRIMARY KEY";
+        return $result;
+    }
+
     /**
      * Save
      */
-    public static function migrate (...$fields) {}
+    public static function migrate ($table, $fields) {
+        // Add primary key
+        $fields = ['id' => ORM::primary ()] + $fields;
+
+        $link = new Connection;
+        $result = $link->createTable ($table, $fields);
+
+        return $result;
+    }
 }

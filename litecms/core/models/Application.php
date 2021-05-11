@@ -6,6 +6,7 @@ use Litecms\Core\Models\Router;
 use Litecms\Core\Models\User;
 use const Litecms\Config\Project\Name;
 use const Litecms\Config\Project\TimeZone;
+use const Litecms\Config\Project\Applications;
 
 class Application
 {
@@ -32,9 +33,21 @@ class Application
     public function createapp (string $name) {}
 
     /**
-     * Walkthrough   all installed applications and create it's tables in db
+     * Walkthrough all installed applications and create it's tables in db
      * 
      * @return void
      */
-    public function migrate () {}
+    public function migrate () {
+        echo "<strong>Start working!</strong><br>";
+        echo "<ol>Installed apps:";
+
+        foreach (Applications as $app) {
+            $result = $app::init ();
+            echo "<li>".$app::$verboseNamePlural.": $result</li>";
+        }
+
+        echo "</ol>";
+
+        echo "<strong>Done!</strong>";
+    }
 }
