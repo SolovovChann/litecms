@@ -16,11 +16,13 @@ const Dirs = [
     
     'apps' => 'apps',
     'static' => 'static',
-    'templates' => 'templates',
+    'templates' => [
+        'templates'
+    ],
 ];
 
 // Register your models here
-const Applications = [
+const Applications = [ 
 ];
 
 const TimeZone = "";
