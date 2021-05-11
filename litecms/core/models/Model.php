@@ -24,8 +24,7 @@ class Model
      */
     public static function all () {
         $link = new Connection ();
-        $result = $link->getObject (get_called_class (), static::$table, -1); // If pass -1 to getObject, it returns all entrys as objects
-        $link->close ();
+        $result = $link->ormQuery (get_called_class (), 1);
 
         return $result;
     }
@@ -61,11 +60,7 @@ class Model
     public static function get (int $id) {
         
         $link = new Connection ();
-        $result = $link->getObject (
-            get_called_class (),
-            static::$table,
-            $id
-        );
+        $result = $link->ormQuery (get_called_class (), ["id = $id"]);
 
         return $result;
     }

@@ -98,8 +98,9 @@ class Connection
      * Same function as Connection::query, but returns object of class
      * You can get all entrys as objects, for that, pass -1 as id
      * 
-     * @example $link->getObject ('Litecms\Apps\Articles\Article', 'articles_article', 5); // Get article with id = 6 and return as object
-     * @example $link->getObject ('Litecms\Apps\Articles\Article', 'articles_article', -1); // Get all articles
+     * @example $link->ormQuery ('Litecms\Apps\Articles\Article', ['id = 6']); // Get article with id = 6 and return as object
+     * @example $link->ormQuery ('Litecms\Apps\Articles\Article', ['title LIKE Art of %']); // Get articles with condition
+     * @example $link->ormQuery ('Litecms\Apps\Articles\Article', 1); // Get all articles
      * 
      * @param string $class - class to fetch
      * @param string $table – table, where get all data
@@ -107,25 +108,26 @@ class Connection
      * 
      * @return object|null
      */
-    public function getObject (string $class, string $table, int $id) {
-        // If id = -1, return all object
-        if ($id == -1) {
-            $data = $this->link->query (sprintf ("SELECT * FROM %s WHERE 1", $this->prefix.$table));
-            $result = [];
+    public function ormQuery (string $class, $condition) {
+        $query = sprintf ("SELECT * FROM %s WHERE %s", $this->prefix.$class::$table, $this->regex ($condition));
+        $result = $this->link->query ($query);
 
-            while ($obj =  $data->fetch_object ()) {
-                $result[] = $obj;
-            }
-
-            return $result;
+        if (!$result) {
+            // Return null
+            return "Query '$query' do not returns anything";
         }
-        $result = $this->link->query (sprintf ("SELECT * FROM %s WHERE `id` = %d LIMIT 1",
-            $this->prefix.$table,
-            $id
-        ));
-        $result = $result->fetch_object ($class);
 
-        return $result;
+        // If returns only one entry
+        if ($result->num_rows == 1) {
+            return $result->fetch_object ($class);
+        }
+
+        // Fetch all entrys as objects
+        $array = [];
+        while ($obj = $result->fetch_object($class)) {
+            $array[] = $obj;
+        }
+        return $array;
     }
 
     /**
@@ -169,15 +171,17 @@ class Connection
     public function select (string $table, $fields = "*", $condition = "", $limit = 50, string $order = 'id', bool $reverse = false) {
         // Collapse all fields to one string
         if (gettype ($fields) == 'array') {
-            $fields = implode ('`, `', $fields);
+            $fields = '`'. implode ('`, `', $fields) . '`';
         }
 
-        $query = "SELECT `%s` FROM %s WHERE %s ORDER BY `%s` %s";
+        $query = "SELECT %s FROM %s WHERE %s ORDER BY `%s` %s";
 
         // Add limit if exists
         if (!empty ($limit)) {
             $query .= " LIMIT $limit";
         }
+
+        $condition = $this->regex ($condition);
 
         // Set $reverse "DESC" or "ASC" value based on it's current value
         $reverse = ($reverse === true)
@@ -187,11 +191,31 @@ class Connection
         $result = $this->query ($query,
             $fields,
             $this->prefix . $table,
-            $this->regex ($condition),
+            $condition,
             $order,
             $reverse
         );
 
+
+        return $result;
+    }
+
+    public function createTable (string $name, array $fields)
+    {
+        $check = $this->query ("SELECT * FROM information_schema.tables WHERE table_schema = '%s' AND table_name = '%s' LIMIT 1", 'litecms', $this->prefix.$name);
+        if ($check !== false) {
+            // Table already exists
+            return "Table '".$this->prefix.$name."' already exists";
+        }
+
+        // Merge array like `key` value, `key2` value2
+        $data = [];
+        foreach ($fields as $key => $value) {
+            $data[] = sprintf ("`%s` %s", $key, $value);
+        }
+        $data = implode (', ', $data);
+
+        $result = $this->query ("CREATE TABLE %s (%s)", $this->prefix.$name, $data);
 
         return $result;
     }
@@ -208,8 +232,6 @@ class Connection
         $output = "";
 
         if (gettype ($input) == 'array' and !empty ($input)) {
-            $output = [];
-
             preg_match_all ("/(\S*)\s?(!=|<=|>=|<|>|=|LIKE)\s?(\S*)/", implode(' ', $input), $matches, PREG_SET_ORDER);
             // It's bad practice, but I don't know better way :c
             foreach ($matches as $match) {
