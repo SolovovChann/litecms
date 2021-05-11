@@ -100,6 +100,11 @@ class Router
      * @return void
      */
     static public function throw404 (string $message) {
+        if (Debug === true) {
+            echo ("<strong>Warning!</strong> " . $message);
+            return;
+        }
+
         // Redirect to 404
         $host = 'http://'.$_SERVER['HTTP_HOST'].'/';
         header ('HTTP/1.1 404 Not Found');
