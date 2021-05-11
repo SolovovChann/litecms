@@ -41,13 +41,13 @@ class User extends Model
         
         if (!$user) {
             // If user not found
-            return;
+            return "User not found";
         }
 
         // Verify password
         if (!password_verify ($password, $user->password)) {
             // If passwords not match
-            return;
+            return "Passwords not match";
         }
 
         $timeZone = new DateTimeZone (TimeZone);
@@ -116,5 +116,17 @@ class User extends Model
         }
 
         unset ($_SESSION['user']);
+    }
+
+
+    /* Model object's methods */
+
+
+    public function signup ($email, $password)
+    {
+        $this->email = $email;
+        $this->password = password_hash ($password, PASSWORD_DEFAULT);
+
+        $this->save ();
     }
 }
