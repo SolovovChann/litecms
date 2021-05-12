@@ -109,7 +109,10 @@ class Connection
      * @return object|null
      */
     public function ormQuery (string $class, $condition) {
-        $query = sprintf ("SELECT * FROM %s WHERE %s", $this->prefix.$class::$table, $this->regex ($condition));
+        $query = sprintf ("SELECT * FROM %s WHERE %s",
+            $this->prefix.$class::$table,
+            $this->regex ($condition)
+        );
         $result = $this->link->query ($query);
 
         if (!$result) {
