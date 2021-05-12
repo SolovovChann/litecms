@@ -4,9 +4,7 @@ namespace Litecms\Config\Project;
 
 // Warning! Disable on production
 const Debug = true;
-
 const Name = "";
-
 const Url = "";
 
 const Dirs = [
@@ -22,7 +20,8 @@ const Dirs = [
 ];
 
 // Register your models here
-const Applications = [ 
+const Applications = [
 ];
 
 const TimeZone = "";
+const LogoutTime = 15;
