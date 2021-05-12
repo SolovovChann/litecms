@@ -2,9 +2,17 @@
 
 namespace Litecms\Core\Models;
 
-use Litecms\Core\Models\Connection;
-use Litecms\Core\Models\{Model, ORM};
-use const Litecms\Config\Project\TimeZone;
+use Litecms\Core\Models\{
+    Connection,
+    Model,
+    ORM,
+    Validator,
+    Router,
+};
+use const Litecms\Config\Project\{
+    TimeZone,
+    LogoutTime
+};
 
 class User extends Model
 {
@@ -33,7 +41,12 @@ class User extends Model
     }
 
     /**
+     * Authenticate user in session
      * 
+     * @param string $email – user's email
+     * @param string $password – user's password
+     * 
+     * @return void
      */
     public static function auth (string $email, string $password) {
         // Try find user with email
@@ -50,14 +63,13 @@ class User extends Model
             return "Passwords not match";
         }
 
-        $timeZone = new DateTimeZone (TimeZone);
-        $currentTime = new DateTime ("now", $timeZone);
-        $extraTime = new DateInterval ("PT15M"); // Extra 15 minutes
+        $currentTime = time ();
+        $extraTime = $currentTime + LogoutTime * 60; // Add extra 15 minutes
 
-        // Put user's token and DateTime object of it's expire in session
         $_SESSION['user'] = [
+            'user_id' => $user->id, // Save user's id to identificate
             'token' => hash ("sha256", $user->email . $currentTime), // Hash user email and current time
-            'expiry' => $currentTime->add ($extraTime) // Add extra munutes to current
+            'expiry' => $extraTime,
         ];
     }
 
@@ -75,13 +87,14 @@ class User extends Model
             return;
         }
 
-        $currentTime = new DateTime ("now", TimeZone);
+        $currentTime = time ();
         
-        if ($currentTime->diff ($token['expiry'])) {
+        if ($currentTime > $token['expiry']) {
             // Token lifetime is out
-            User::logout ();
+            User::signout ();
         } else {
             // Refresh token lifetime
+            $_SESSION['user']['expiry'] = time () + LogoutTime * 60;
         }
     }
 
@@ -108,7 +121,7 @@ class User extends Model
      * 
      * @return void
      */
-    public static function logout ()
+    public static function signout ()
     {
         if (empty ($_SESSION['user'])) {
             // User is not logined
@@ -122,11 +135,23 @@ class User extends Model
     /* Model object's methods */
 
 
-    public function signup ($email, $password)
+    public function signup ()
     {
-        $this->email = $email;
-        $this->password = password_hash ($password, PASSWORD_DEFAULT);
+        if (!$this->password or !$this->username or !$this->email) {
+            // Not all arguments passed
+            return;
+        }
+        $this->password = password_hash ($this->password, PASSWORD_DEFAULT);
 
-        $this->save ();
+        $link = new Connection;
+        $result = $link->query ("INSERT INTO %s (`username`, `email`, `password`, `groups`) VALUES ('%s', '%s', '%s', %d)",
+            $link->prefix.self::$table,
+            $this->username,
+            $this->email,
+            $this->password,
+            1
+        );
+
+        return $result;
     }
 }
