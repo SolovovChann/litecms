@@ -42,7 +42,7 @@ class Model
      */
     public static function filter (...$condition) {
         $link = new Connection ();
-        $result = $link->select (static::$table, '*', $condition);
+        $result = $link->ormQuery (get_called_class (),  $condition);
 
         return $result;
     }
