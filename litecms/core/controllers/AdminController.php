@@ -2,9 +2,12 @@
 
 namespace Litecms\Core\Controllers;
 
-use Litecms\Core\Models\Controller;
-use Litecms\Core\Models\View;
-use Litecms\Core\Models\Router;
+use Litecms\Core\Models\{
+    Application,
+    Controller,
+    Router,
+    View,
+};
 use const Litecms\Config\Project\Applications;
 
 class AdminController extends Controller
@@ -15,5 +18,13 @@ class AdminController extends Controller
             'title' => 'Admin',
             'apps' => Applications,
         ]);
+    }
+
+    public function migrate ()
+    {
+        $app = new Application;
+        $app->migrate ();
+
+        return Router::redirect ('AdminController');
     }
 }
