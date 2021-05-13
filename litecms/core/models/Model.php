@@ -156,7 +156,7 @@ class Model
      */
     public function delete () {
         $link = new Connection ();
-        $result = $link->delete (static::$table, ["id = " . $this->id]);
+        $result = $link->delete (static::$table, ["id = {$this->id}"]);
 
         return $result;
     }

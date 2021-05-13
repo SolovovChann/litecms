@@ -17,7 +17,7 @@ class View
      * 
      * @return string
      */
-    static public function render (string $template, array $context = []) {
+    public static function render (string $template, array $context = []) {
         // Search all folders, set in config file
         foreach (Dirs['templates'] as $folder) {
             $file = Filesystem::path ($folder, $template);
@@ -37,5 +37,5 @@ class View
         }
 
         throw Router::throw404 ("Template '$template' is not exists");
-    } 
+    }
 }

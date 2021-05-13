@@ -7,21 +7,22 @@ use const Litecms\Config\Project\Dirs;
 use Litecms\Assets\Debug;
 use Litecms\Assets\Filesystem;
 use Litecms\Core\Models\{
+    Connection,
     Controller,
     Page,
     Router,
     View,
+    Validator
 };
+use Litecms\Apps\Articles\Article;
 
 class HomeController extends Controller
 {
     public function default ()
     {
-        $page = Page::get (1);
         echo View::render ('home.php', [
             'title' => 'Homepage'
         ]);
-        Debug::print ($page);
     }
 
     public function test (...$args)
