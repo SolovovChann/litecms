@@ -46,7 +46,7 @@ class User extends Model
      * @param string $email – user's email
      * @param string $password – user's password
      * 
-     * @return void
+     * @return self
      */
     public static function auth (string $email, string $password) {
         // Try find user with email
@@ -71,6 +71,8 @@ class User extends Model
             'token' => hash ("sha256", $user->email . $currentTime), // Hash user email and current time
             'expiry' => $extraTime,
         ];
+
+        return $user;
     }
 
     /**
@@ -112,6 +114,24 @@ class User extends Model
         return (!empty ($_SESSION['user']))
         ? true
         : false;
+    }
+
+    /**
+     * Get authenticated user or return false 
+     * 
+     * @return self|bool
+     */
+    public static function me ()
+    {
+        $id = $_SESSION['user']['user_id'];
+        if (empty ($id)) {
+            // User is not authenticated
+            return false;
+        }
+
+        $user = User::get ($id);
+
+        return $user;
     }
 
     /**
