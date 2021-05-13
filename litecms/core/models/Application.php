@@ -2,18 +2,23 @@
 
 namespace Litecms\Core\Models;
 
-use Litecms\Core\Models\Router;
-use Litecms\Core\Models\User;
-use const Litecms\Config\Project\Name;
-use const Litecms\Config\Project\TimeZone;
-use const Litecms\Config\Project\Applications;
+use Litecms\Core\Models\{
+    Router,
+    User,
+    View,
+};
+use const Litecms\Config\Project\{
+    Applications,
+    Name,
+    TimeZone,
+};
 
 class Application
 {
     public $name = Name;
 
     /**
-     * Starts routing pages and use controllers
+     * Get page url and use responsible controller
      * 
      * @return void
      */
@@ -38,16 +43,8 @@ class Application
      * @return void
      */
     public function migrate () {
-        echo "<strong>Start working!</strong><br>";
-        echo "<ol>Installed apps:";
-
         foreach (Applications as $app) {
-            $result = $app::init ();
-            echo "<li>".$app::$verboseNamePlural.": $result</li>";
+            $app::init ();
         }
-
-        echo "</ol>";
-
-        echo "<strong>Done!</strong>";
     }
 }
