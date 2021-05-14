@@ -155,6 +155,12 @@ class User extends Model
     /* Model object's methods */
 
 
+    /**
+     * Register new user.
+     * Returns false in case of error
+     * 
+     * @return self|bool
+     */
     public function signup ()
     {
         if (!$this->password or !$this->username or !$this->email) {
@@ -172,6 +178,13 @@ class User extends Model
             1
         );
 
-        return $result;
+        if (!$result) {
+            // Something gone wrong
+            return false;
+        }
+
+        $user = User::filter ("email = {$this->email}");
+
+        return $user;
     }
 }
