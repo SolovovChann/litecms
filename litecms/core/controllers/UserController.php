@@ -8,6 +8,7 @@ use Litecms\Core\Models\{
     User,
     View,
     Router,
+    Validator
 };
 
 class UserController extends Controller
@@ -43,6 +44,14 @@ class UserController extends Controller
 
     public function signup ()
     {
+        $user = new User;
+        $user->username = $_REQUEST['username'];
+        $email = Validator::email ($_REQUEST['email']);
+        $password = Validator::password ($_REQUEST['password']);
 
+        $user = $user->signup (); // register new user
+        User::auth ($user->email, $user->password); // authenticate new user
+
+        return Router::redirect ("UserController");
     }
 }
