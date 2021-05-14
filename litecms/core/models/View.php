@@ -36,6 +36,6 @@ class View
             }
         }
 
-        throw Router::throw404 ("Template '$template' is not exists");
+        Router::throw404 ("Template '$template' is not exists");
     }
 }
