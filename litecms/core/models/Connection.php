@@ -2,18 +2,21 @@
 
 namespace Litecms\Core\Models;
 
+use Litecms\Assets\Message;
+use Litecms\Core\User\User;
 use const Litecms\Config\Connection\{
     Host,
     User,
     Password,
     Database,
-    TablePrefix
+    TablePrefix,
 };
 
 class Connection
 {
     private $link;
     public $prefix = TablePrefix;
+
 
     /**
      * Create connection to database
@@ -24,6 +27,7 @@ class Connection
     public function __construct () {
         $this->connect ();
     }
+
 
     /**
      * Closes connection after work
@@ -46,8 +50,19 @@ class Connection
      */
     public function connect () {
         $this->link = new \mysqli (Host, User, Password, Database);
+        $this->link->set_charset ("utf8");
     }
 
+
+    /**
+     * Same function as Connection::query()
+     * Use myslqi::prepare method for send query
+     * 
+     * @param string $query – string to format
+     * @param array $values
+     * 
+     * @return array|bool
+     */
     public function pureQuery (string $query, ...$values){
         $paramCount = count ($values);
 
@@ -65,6 +80,13 @@ class Connection
         ? $result->fetch_array (MYSQLI_ASSOC)
         : $result->fetch_all (MYSQLI_ASSOC);
     }
+
+
+    public function escape($string)
+    {
+        return $this->link->real_escape_string ($string);
+    }
+
 
     /**
      * Send query to database. Use vsprint function to cast vars
@@ -84,8 +106,9 @@ class Connection
         }
 
         $result = $this->link->query ($query);
+        array_map (function ($i) { return $this->escape($i); }, $values);
 
-        if (!$result or $result->num_rows == 0) {
+        if (!$result or @$result->num_rows == 0) {
             return false;    
         }
 
@@ -93,6 +116,7 @@ class Connection
         ? $result->fetch_array (MYSQLI_ASSOC)
         : $result->fetch_all (MYSQLI_ASSOC);
     }
+
 
     /**
      * Same function as Connection::query, but returns object of class
@@ -109,7 +133,7 @@ class Connection
      * @return object|null
      */
     public function ormQuery (string $class, $condition) {
-        $query = sprintf ("SELECT * FROM %s WHERE %s",
+        $query = sprintf ("SELECT * FROM `%s` WHERE %s",
             $this->prefix.$class::$table,
             $this->regex ($condition)
         );
@@ -117,7 +141,8 @@ class Connection
 
         if (!$result) {
             // Return null
-            return "Query '$query' do not returns anything";
+            Message::warning ("ORM query '$query' do not returns anything");
+            return false;
         }
 
         // If returns only one entry
@@ -132,6 +157,7 @@ class Connection
         }
         return $array;
     }
+
 
     /**
      * Insert data into table
@@ -155,6 +181,7 @@ class Connection
 
         return $result;
     }
+
 
     /**
      * Send query to database like SELECT <fields> FROM <table> WHERE <condition>
@@ -199,29 +226,33 @@ class Connection
             $reverse
         );
 
-
         return $result;
     }
 
+
+    /**
+     * Creates table
+     * 
+     * @param string $name – name of table
+     * @param array $fields – array of strings, describing fields
+     * 
+     * @return void
+     */
     public function createTable (string $name, array $fields)
     {
         $check = $this->query ("SELECT * FROM information_schema.tables WHERE table_schema = '%s' AND table_name = '%s' LIMIT 1", 'litecms', $this->prefix.$name);
         if ($check !== false) {
             // Table already exists
-            return "Table '".$this->prefix.$name."' already exists";
+            Message::warning (sprintf ("Table '%s' already exists", $this->prefix.$name));
+            return;
         }
 
-        // Merge array like `key` value, `key2` value2
-        $data = [];
-        foreach ($fields as $key => $value) {
-            $data[] = sprintf ("`%s` %s", $key, $value);
-        }
-        $data = implode (', ', $data);
-
+        $data = implode (', ', $fields);
         $result = $this->query ("CREATE TABLE %s (%s)", $this->prefix.$name, $data);
 
         return $result;
     }
+
 
     /**
      * Returns string like `field` = "value" 
@@ -247,6 +278,7 @@ class Connection
         return $output;
     }
 
+
     /**
      * Delete entry from table by condition
      * 
@@ -267,6 +299,7 @@ class Connection
         return $result;
     }
     
+
     /**
      * Close connection
      * 
@@ -278,5 +311,4 @@ class Connection
         $this->link->close ();
         unset ($this->link);
     }
-    
 }
