@@ -2,7 +2,7 @@
 
 namespace Litecms\Core\Models;
 
-use Litecms\Assets\Misc;
+use Litecms\Assets\{Misc, Message, Debug};
 use Litecms\Core\Models\View;
 use const Litecms\Config\Project\Debug;
 
@@ -13,6 +13,7 @@ class Router
      * You can edit it in /litecms/config/routes.php file 
      */
     static public $routes = [];
+
 
     /**
      * Catch request and use controllers for response
@@ -35,14 +36,16 @@ class Router
         }
 
         $controller = new $controller;
-
-        // Try to pass arguments in function or throw 404
-        try {
-            $controller->$action (...$args);
-        } catch (\ArgumentCountError $e) {
-            Router::throw404 ("Can't find function '$action' that expect " . count ($args) . " argument(s)");
+        if (!method_exists ($controller, $action)) {
+            Message::error ("Такой страницы не существует");
+            Router::throw404 ("Page '$action' not found in controller '".get_class ($controller)."'");
+            return false; 
         }
+
+        // Echo result of controller's method
+        echo $controller->$action (...$args);
     }
+
 
     /**
      * Add tracking route
@@ -54,11 +57,12 @@ class Router
      * 
      * @return void
      */
-    static public function add (string $route, string $controller)
+    public static function add (string $route, string $controller)
     {
         $url = Misc::clear_url ($route);
         self::$routes[$url] = $controller;
     }
+
 
     /**
      * Define controller responsible for the index page
@@ -69,10 +73,10 @@ class Router
      * 
      * @return void
      */
-    static public function addindex (string $controller)
-    {
+    public static function addindex (string $controller) {
         self::$routes[''] = $controller;
     }
+
 
     /**
      * Define controller responsible for the 404 page
@@ -83,10 +87,10 @@ class Router
      * 
      * @return void
      */
-    static public function add404 (string $controller)
-    {
+    public static function add404 (string $controller) {
         self::$routes['404'] = $controller;
     }
+
 
     /**
      * Redirect to default 404 page
@@ -99,7 +103,7 @@ class Router
      * 
      * @return void
      */
-    static public function throw404 (string $message) {
+    public static function throw404 (string $message) {
         if (Debug === true) {
             echo ("<strong>Warning!</strong> " . $message);
             return;
@@ -111,6 +115,7 @@ class Router
         header ("Status: 404 Not Found");
         header ('Location: '.Router::url ('Controller404'));
     }
+
 
     /**
      * Get link by special entry like <controller>:<action>:<arguments>
@@ -125,7 +130,7 @@ class Router
         // Split input
         $split = explode (':', $to);
         $controller = $split[0];
-        $action = $split[1];
+        $action = $split[1] ?? '';
         $args = array_slice ($split, 2);
 
         foreach (self::$routes as $url => $route) {
@@ -136,6 +141,7 @@ class Router
                 if ($url == '' and !empty ($action)) {
                     continue;
                 }
+
                 // Add action if isset
                 $url .= (!empty ($action))
                 ? "/" . $action
@@ -151,6 +157,7 @@ class Router
         }
     }
 
+
     /**
      * Redirect using special entry like <controller>:<action>:<argument1>:<argument2>:...:<argumentN>
      * Finds controller in Applications, and redirects to it's url
@@ -162,7 +169,20 @@ class Router
      */
     public static function redirect (string $to)
     {
-        $url = static::url ($to);
+        $commonValues = [
+            'self' => $_SERVER['REQUEST_URI'],
+            'home' => '/',
+            'parent' => explode ('/', $_SERVER['REQUEST_URI'])[1],
+            'back' => 'javascript://history.go(-1)',
+        ];
+
+        if (array_key_exists ($to, $commonValues) === true) {
+            $to = $commonValues[$to];
+            header ('Location: '.$to);
+            return;
+        }
+
+        $url = Router::url ($to);
         header ('Location: '.$url);
     }
 }
