@@ -1,12 +1,12 @@
 <?php
 
-namespace Litecms\Core\Models;
+namespace Litecms\Core\User;
 
+use Litecms\Assets\{Message, Filesystem};
 use Litecms\Core\Models\{
     Connection,
     Model,
     ORM,
-    Validator,
     Router,
 };
 use const Litecms\Config\Project\{
@@ -16,28 +16,34 @@ use const Litecms\Config\Project\{
 
 class User extends Model
 {
-    public static $table = "user";
+    public static $table = "users";
     public static $verboseName = "Пользователь";
     public static $verboseNamePlural = "Пользователи";
 
     public $username;
     private $email;
     private $password; 
+    public $online;
     public $groups;
+    public $avatar;
+
 
     public static function init ()
     {
-        $username = ORM::varchar ();
-        $email = ORM::varchar ();
-        $password = ORM::varchar ();
-        $groups = ORM::varchar ();
-
         return ORM::migrate (self::$table, [
-            'username' => $username,
-            'email' => $email,
-            'password' => $password,
-            'groups' => $groups
+            ORM::varchar ("username"),
+            ORM::varchar ("email"),
+            ORM::varchar ("password"),
+            ORM::varchar ("online"),
+            ORM::foreign ("groups", UserGroup::$table, ORM::setNull),
+            ORM::varchar ("avatar"),
         ]);
+    }
+
+
+    public function __toString ()
+    {
+        return $this->username;
     }
 
     /**
@@ -54,13 +60,15 @@ class User extends Model
         
         if (!$user) {
             // If user not found
-            return "User not found";
+            Message::error ("Пользователь с таким email не найден!");
+            return Router::redirect ("HomeController");
         }
 
         // Verify password
         if (!password_verify ($password, $user->password)) {
             // If passwords not match
-            return "Passwords not match";
+            Message::error ("Неверный пароль");
+            return Router::redirect ("HomeController");
         }
 
         $currentTime = time ();
@@ -72,8 +80,12 @@ class User extends Model
             'expiry' => $extraTime,
         ];
 
+        $user->online = "1";
+        $user->save ();
+
         return $user;
     }
+
 
     /**
      * Check for expiry of user's token
@@ -82,9 +94,11 @@ class User extends Model
      */
     public static function checkToken ()
     {
-        $token = $_SESSION['user'];
+        $token = !empty ($_SESSION['user'])
+        ? $_SESSION['user']
+        : false;
 
-        if (empty ($token)) {
+        if ($token === false) {
             // User is not authorised
             return;
         }
@@ -99,6 +113,36 @@ class User extends Model
             $_SESSION['user']['expiry'] = time () + LogoutTime * 60;
         }
     }
+
+
+    /**
+     * Get list of authenticated users
+     * 
+     * @return array
+     */
+    public static function getOnline ()
+    {
+        $users = User::filter ("online = 1");
+        if (gettype ($users) != 'array') {
+            $users = [$users];
+        }
+
+        return $users;
+    }
+
+
+    /**
+     * Check if authenticated user have access level
+     * 
+     * @param int $accessCode – validate if authenticated user 
+     */
+    public static function is_admin (int $accessLevel = 10)
+    {
+        $group = UserGroup::get (User::me ()->groups);
+
+        return ($group->accessLevel !== $accessLevel); // Return bool 
+    }
+
 
     /**
      * Check for user's authentication. Return true or flase
@@ -116,6 +160,7 @@ class User extends Model
         : false;
     }
 
+
     /**
      * Get authenticated user or return false 
      * 
@@ -123,8 +168,8 @@ class User extends Model
      */
     public static function me ()
     {
-        $id = $_SESSION['user']['user_id'];
-        if (empty ($id)) {
+        $id = $_SESSION['user']['user_id'] ?? false;
+        if ($id === false) {
             // User is not authenticated
             return false;
         }
@@ -133,6 +178,7 @@ class User extends Model
 
         return $user;
     }
+
 
     /**
      * Sign user out
@@ -147,6 +193,9 @@ class User extends Model
             // User is not logined
             return;
         }
+        $user = User::me ();
+        $user->online = date("Y-m-d H:i:s");
+        $user->save ();
 
         unset ($_SESSION['user']);
     }
@@ -161,30 +210,37 @@ class User extends Model
      * 
      * @return self|bool
      */
-    public function signup ()
+    public function signup (string $username, string $email, string $password)
     {
-        if (!$this->password or !$this->username or !$this->email) {
-            // Not all arguments passed
+        $this->username = $username;
+        $this->email = $email;
+        $this->password = password_hash ($password, PASSWORD_DEFAULT);
+
+        // Dublicate check
+        $dublicate = User::filter ('username = '.$username);
+        if (!empty ($dublicate)) {
+            // Duplicate username
+            Message::error ("User with username = $username already exists!");
             return;
         }
-        $this->password = password_hash ($this->password, PASSWORD_DEFAULT);
+
+        $dublicate = User::filter ("email = $email");
+        if (!empty ($dublicate)) {
+            // Duplicate email
+            Message::error ("User with email = $email already exists!");
+            return;
+        }
 
         $link = new Connection;
-        $result = $link->query ("INSERT INTO %s (`username`, `email`, `password`, `groups`) VALUES ('%s', '%s', '%s', %d)",
+        $result = $link->query ("INSERT INTO %s (`username`, `email`, `password`, `groups`, `avatar`) VALUES ('%s', '%s', '%s', '%d', '%s')",
             $link->prefix.self::$table,
             $this->username,
             $this->email,
             $this->password,
-            1
+            1,
+            $this->avatar
         );
 
-        if (!$result) {
-            // Something gone wrong
-            return false;
-        }
-
-        $user = User::filter ("email = {$this->email}");
-
-        return $user;
+        return $this;
     }
 }
