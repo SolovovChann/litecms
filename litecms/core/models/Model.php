@@ -25,6 +25,10 @@ class Model
     public static function all () {
         $link = new Connection ();
         $result = $link->ormQuery (get_called_class (), 1);
+        // If returns only one object
+        if (gettype ($result) == "object") {
+            $result = [$result];
+        }
 
         return $result;
     }
@@ -119,6 +123,7 @@ class Model
             
             // Can't get entry from db
             if (empty ($entry)) {
+                Message::error ("Model save: can't get entry from DB with id '{$this->id}'");
                 return false;
             }
 
