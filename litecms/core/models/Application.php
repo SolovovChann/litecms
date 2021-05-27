@@ -4,19 +4,20 @@ namespace Litecms\Core\Models;
 
 use Litecms\Core\Models\{
     Router,
-    User,
     View,
 };
 use Litecms\Assets\{
+    Debug,
     Filesystem,
+    Message,
     Misc,
-    Debug
 };
+use Litecms\Core\User\User;
 use const Litecms\Config\Project\{
     Applications,
+    Dirs,
     Name,
     TimeZone,
-    Dirs,
 };
 
 class Application
@@ -24,11 +25,12 @@ class Application
     public $name = Name;
 
     /**
-     * Get page url and use responsible controller
+     * Single entry point to the application
      * 
      * @return void
      */
     public function start () {
+        header('Content-Type: text/html; charset=utf-8');
         date_default_timezone_set(TimeZone);
         session_start ();
         
@@ -36,10 +38,14 @@ class Application
         Router::start ();
     }
 
+
     /**
      * Create application folder with controller and models files in it
      * 
      * @param string $name – name of application. Will be used in namespace
+     * @param string $url – wich url to process default
+     * 
+     * @return void 
      */
     public static function createapp (string $name, string $url, $model = null) {
         $name = ucwords (strtolower ($name)); // Name to title case
@@ -47,6 +53,7 @@ class Application
 
         if ($folder == false) {
             // Can't create directory
+            Message::error ("Can't create directory '$name'!");
             return false;
         }
 
@@ -70,6 +77,15 @@ class Application
         }
     }
 
+
+    /**
+     * Register controller as responsible for the url
+     * 
+     * @param string $url
+     * @param string $class – controller's full class with namespace
+     * 
+     * @return void
+     */
     public static function declareApp (string $url, string $class)
     {
         // Edit routes.php file, to start tracking new controller
@@ -77,14 +93,17 @@ class Application
 
         if (!file_exists ($routes)) {
             // Routers.php file not found
+            Message::error ("Routers.php file not found");
             return false;
         }
         if (Misc::in_assoc ($url, Router::$routes)) {
             // Url already exists
+            Message::error ("Url already exists");
             return false;
         }
         if (in_array ($name, Router::$routes)) {
             // Controller already exists
+            Message::error ("Controller already exists");
             return false;
         }
 
@@ -92,6 +111,7 @@ class Application
         $result = file_put_contents ($routes, $newRoute, FILE_APPEND);
     }
 
+    
     /**
      * Walkthrough all installed applications and create it's tables in db
      * 
