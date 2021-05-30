@@ -132,10 +132,12 @@ class Connection
      * 
      * @return object|null
      */
-    public function ormQuery (string $class, $condition) {
-        $query = sprintf ("SELECT * FROM `%s` WHERE %s",
+    public function ormQuery (string $class, $condition, string $order = 'id', int $limit = 50) {
+        $query = sprintf ("SELECT * FROM `%s` WHERE %s ORDER BY %s LIMIT %d",
             $this->prefix.$class::$table,
-            $this->regex ($condition)
+            $this->regex ($condition),
+            $order,
+            $limit
         );
         $result = $this->link->query ($query);
 

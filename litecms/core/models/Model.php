@@ -12,6 +12,8 @@ class Model
     public static $verboseName;
     public static $verboseNamePlural;
 
+    public static $orderBy = "id";
+
     /* Class static methods */
     
     /**
@@ -24,7 +26,7 @@ class Model
      */
     public static function all () {
         $link = new Connection ();
-        $result = $link->ormQuery (get_called_class (), 1);
+        $result = $link->ormQuery (get_called_class (), 1, static::$orderBy);
         // If returns only one object
         if (gettype ($result) == "object") {
             $result = [$result];
@@ -44,9 +46,9 @@ class Model
      * 
      * @return array|bool
      */
-    public static function filter (...$condition) {
+    public static function filter (array $condition, string $orderBy, int $limit) {
         $link = new Connection ();
-        $result = $link->ormQuery (get_called_class (),  $condition);
+        $result = $link->ormQuery (get_called_class (),  $condition, static::$orderBy);
 
         return $result;
     }
@@ -64,7 +66,7 @@ class Model
     public static function get (int $id) {
         
         $link = new Connection ();
-        $result = $link->ormQuery (get_called_class (), ["id = $id"]);
+        $result = $link->ormQuery (get_called_class (), ["id = $id"], static::$orderBy);
 
         return $result;
     }
