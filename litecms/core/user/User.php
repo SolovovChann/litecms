@@ -36,7 +36,7 @@ class User extends Model
             ORM::varchar ("password"),
             ORM::varchar ("online"),
             ORM::foreign ("groups", UserGroup::$table, ORM::setNull),
-            ORM::varchar ("avatar"),
+            ORM::varchar ("avatar", 255, true, "/static/img/defaultava.svg"),
         ]);
     }
 
