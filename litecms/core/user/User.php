@@ -2,7 +2,7 @@
 
 namespace Litecms\Core\User;
 
-use Litecms\Assets\{Message, Filesystem};
+use Litecms\Assets\{Message, Filesystem, Validator};
 use Litecms\Core\Models\{
     Connection,
     Model,
@@ -17,10 +17,12 @@ use const Litecms\Config\Project\{
 class User extends Model
 {
     public static $table = "users";
-    public static $verboseName = "Пользователь";
-    public static $verboseNamePlural = "Пользователи";
+    public static $verbose = "Пользователь";
+    public static $plural = "Пользователи";
 
     public $username;
+    public $fullname;
+    public $bio;
     private $email;
     private $password; 
     public $online;
@@ -32,9 +34,11 @@ class User extends Model
     {
         return ORM::migrate (self::$table, [
             ORM::varchar ("username"),
+            ORM::varchar ("fullname"),
+            ORM::varchar ("bio", 255, true),
             ORM::varchar ("email"),
             ORM::varchar ("password"),
-            ORM::varchar ("online"),
+            ORM::varchar ("online", 255, true, '1'),
             ORM::foreign ("groups", UserGroup::$table, ORM::setNull),
             ORM::varchar ("avatar", 255, true, "/static/img/defaultava.svg"),
         ]);
@@ -46,6 +50,7 @@ class User extends Model
         return $this->username;
     }
 
+
     /**
      * Authenticate user in session
      * 
@@ -54,18 +59,19 @@ class User extends Model
      * 
      * @return self
      */
-    public static function auth (string $email, string $password) {
+    public static function auth (string $email, string $password)
+    {
         // Try find user with email
-        $user = User::filter ('email = ' . $email);
+        $user = User::filter ('email = ?', [$email])[0];
         
         if (!$user) {
-            // If user not found
+            // User not found
             Message::error ("Пользователь с таким email не найден!");
             return Router::redirect ("HomeController");
         }
 
         // Verify password
-        if (!password_verify ($password, $user->password)) {
+        if (password_verify ($password, $user->password) === false) {
             // If passwords not match
             Message::error ("Неверный пароль");
             return Router::redirect ("HomeController");
@@ -94,9 +100,7 @@ class User extends Model
      */
     public static function checkToken ()
     {
-        $token = !empty ($_SESSION['user'])
-        ? $_SESSION['user']
-        : false;
+        $token = $_SESSION['user'] ?? false;
 
         if ($token === false) {
             // User is not authorised
@@ -138,9 +142,12 @@ class User extends Model
      */
     public static function is_admin (int $accessLevel = 10)
     {
-        $group = UserGroup::get (User::me ()->groups);
+        if (empty(User::me())) {
+            return;
+        }
 
-        return ($group->accessLevel !== $accessLevel); // Return bool 
+        $group = UserGroup::get (User::me ()->groups);
+        return ((int)$group->accessLevel >= $accessLevel); // Return bool 
     }
 
 
@@ -175,6 +182,12 @@ class User extends Model
         }
 
         $user = User::get ($id);
+        if (!$user) {
+            // User is deleted, but still in session
+            session_start();
+            session_destroy ();
+            return false;
+        }
 
         return $user;
     }
@@ -189,7 +202,7 @@ class User extends Model
      */
     public static function signout ()
     {
-        if (empty ($_SESSION['user'])) {
+        if (!User::is_authenticated()) {
             // User is not logined
             return;
         }
@@ -210,37 +223,37 @@ class User extends Model
      * 
      * @return self|bool
      */
-    public function signup (string $username, string $email, string $password)
+    public function signup (string $username, string $fullname, string $email, string $password)
     {
         $this->username = $username;
         $this->email = $email;
+        $this->fullname = $fullname;
         $this->password = password_hash ($password, PASSWORD_DEFAULT);
 
-        // Dublicate check
-        $dublicate = User::filter ('username = '.$username);
+        $dublicate = User::filter ("username = ? OR email = ?", [$username, $email], 1)[0];
         if (!empty ($dublicate)) {
-            // Duplicate username
-            Message::error ("User with username = $username already exists!");
+            Message::error ("Пользователь с таким именем уже существует!");
             return;
         }
 
-        $dublicate = User::filter ("email = $email");
-        if (!empty ($dublicate)) {
-            // Duplicate email
-            Message::error ("User with email = $email already exists!");
-            return;
-        }
-
-        $link = new Connection;
-        $result = $link->query ("INSERT INTO %s (`username`, `email`, `password`, `groups`, `avatar`) VALUES ('%s', '%s', '%s', '%d', '%s')",
-            $link->prefix.self::$table,
+        $pdo = new Connection;
+        $result = $pdo->query ("INSERT INTO {$pdo->prefix(self::$table)} (`username`, `fullname`, `email`, `password`) VALUES (?, ?, ?, ?)", [
             $this->username,
+            $this->fullname,
             $this->email,
             $this->password,
-            1,
-            $this->avatar
-        );
+        ]);
+    }
 
-        return $this;
+
+    public function changePassword(string $new)
+    {
+        $this->password = password_hash($new, PASSWORD_DEFAULT);
+
+        $pdo = new Connection;
+        $pdo->query("UPDATE {$pdo->prefix(static::$table)} SET `password` = ? WHERE `id` = ?", [
+            $this->password,
+            $this->id,
+        ]);
     }
 }

@@ -7,8 +7,8 @@ use Litecms\Core\Models\{Model, ORM};
 class UserGroup extends Model
 {
     public static $table = "user_groups";
-    public static $verboseName = "Группа пользователей";
-    public static $verboseNamePlural = "Группы пользователей";
+    public static $verbose = "Группа пользователей";
+    public static $plural = "Группы пользователей";
 
     public $name;
     public $description;
