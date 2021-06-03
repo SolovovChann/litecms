@@ -7,164 +7,216 @@ use Litecms\Core\Models\Connection;
 class Model
 {
     public $id;
-    
+
     public static $table;
-    public static $verboseName;
-    public static $verboseNamePlural;
+    public static $verbose;
+    public static $plural;
 
-    public static $orderBy = "id";
+    //  Static methods  //
 
-    /* Class static methods */
-    
+
     /**
-     * Get all objects
-     * Select all entrys from current table
+     * Get all model's objects from DB 
      * 
-     * @example MyModel::all ();
+     * @param int $limit = 50, how many entries will be returned. Use $limit = -1 to get all entries
+     * @param string $order = 'id', which field is used to order the entries
+     * @param bool $reverse = false, use reverse order
+     * 
+     * @example Article::all(); // Get first 50 articles
+     * @example Article::all(-1) // Get all articles
+     * @example Article::all(-1, 'title') // Get all articles and sort it by title
      * 
      * @return array
      */
-    public static function all () {
-        $link = new Connection ();
-        $result = $link->ormQuery (get_called_class (), 1, static::$orderBy);
-        // If returns only one object
-        if (gettype ($result) == "object") {
-            $result = [$result];
-        }
+    public static function all(
+        int $limit = 50,
+        string $order = "id",
+        bool $reverse = false
+    ): array {
+        $pdo = new Connection;
 
-        return $result;
-    }
-    
-    
-    /**
-     * Get all objects matching the condition
-     * You can use few conditions, divided with coma 
-     * 
-     * @example MyModel::filter ('name = John', 'age <= 18');
-     * 
-     * @param array $condition - array of strings used for filtering
-     * 
-     * @return array|bool
-     */
-    public static function filter (array $condition, string $orderBy, int $limit) {
-        $link = new Connection ();
-        $result = $link->ormQuery (get_called_class (),  $condition, static::$orderBy);
+        $reverse = ($reverse === true)
+        ? "DESC"
+        : "ASC";
 
-        return $result;
-    }
-    
-    /**
-     * Get object by ID
-     * If case of error, returns false
-     * 
-     * @example MyModel::get (5);
-     * 
-     * @param int $id 
-     * 
-     * @return object|null
-     */
-    public static function get (int $id) {
+        $sql = sprintf("SELECT * FROM %s WHERE 1 ORDER BY `%s` %s",
+            $pdo->prefix(static::$table),
+            $order,
+            $reverse,
+        );
         
-        $link = new Connection ();
-        $result = $link->ormQuery (get_called_class (), ["id = $id"], static::$orderBy);
+        $result = $pdo->query($sql, [], get_called_class());
+        return $result;
+    }
+
+
+    /**
+     * Find models objects in DB that match the condition
+     * 
+     * @param string $condition, 
+     * @param array $values, array of data, used in condition
+     * @param int $limit = 50, 
+     * @param string $order = "id", 
+     * @param bool $reverse = false 
+     * 
+     * @example Article::filter("name LIKE ? AND age < ?", ["Jo%", 29]) // Get all users, whoes name starts with Jo and younger than 29 years.  
+     * @example Article::filter("name LIKE ? AND age < ?", ["Jo%", 29], 10, 'name', true) // Same result but set limit to 10 and reverse order by name
+     * 
+     * @return array
+     */
+    public static function filter(
+        string $condition,
+        array $values = [],
+        int $limit = 50,
+        string $order = "id",
+        bool $reverse = false
+    ): array {
+        $pdo = new Connection;
+
+        $reverse = ($reverse === true)
+        ? "DESC"
+        : "ASC";
+
+        $sql = sprintf("SELECT * FROM %s WHERE %s ORDER BY `%s` %s LIMIT %s",
+            $pdo->prefix(static::$table),
+            $condition,
+            $order,
+            $reverse,
+            $limit
+        );
+
+        $result = $pdo->query($sql, $values, get_called_class());
+        return $result;
+    }
+
+
+    /**
+     * Get model object via unique key
+     * 
+     * @param int $id unique object's id
+     * 
+     * @example Article::get(1) // Get article with 'id' = 1
+     * 
+     * @return object
+     */
+    public static function get(int $id): ?object
+    {
+        $pdo = new Connection;
+        $result = $pdo->query(
+            "SELECT * FROM {$pdo->prefix(static::$table)} WHERE `id` = ?",
+            [
+                $id
+            ],
+            get_called_class()
+        );
+        $result = $result[0];
 
         return $result;
     }
 
-    /* Model object's methods */
+
+//  Object's methods  //
 
 
-    public function __toString ()
+    public function __toString()
     {
-        return static::$verboseNamePlural;
+        return (isset(static::$plural))
+        ? static::$plural
+        : $this->id;
     }
 
+
     /**
-     * Description
-     * More description
-     * 
-     * @param
+     * Deteles selected entry from DB
      * 
      * @return void
      */
-    public function set ($args) {
-        foreach ($args as $key => $value) {
-            $this->$key = $value;
-        }
+    public function delete(): void
+    {
+        $pdo = new Connection;
+
+        $pdo->query("DELETE FROM {$pdo->prefix(static::$table)} WHERE `id` = ?", [
+            $this->id
+        ]);
     }
-    
+
+
     /**
-     * Saves model changes in database
-     * Also can be used for updating inforamtion
-     * 
-     * @example
-     * $john = new Human ();
-     * $john->name = 'John';
-     * $john->age = 28;
-     * $john->height = 1.82;
-     * $john->save ();
-     * @example
-     * $john = Human::get (5); // Get human with id = 5
-     * $john->age += 1; // Yey, John celebrates his birthday! Congrats!
-     * $john->save (); // Save new John's age in db
-     * @example
-     * $john = Human::get (5);
-     * echo $john->name; // "John"
-     * $john->name = "John"; // Do not worry, the same information will not be overwritten
-     * $john->age += 1; // Saves only that part
-     * $john->save ();
+     * Saves selected object in database
      * 
      * @return void
      */
-    public function save () {
-        $link = new Connection ();
+    public function save(): void
+    {
+        $pdo = new Connection;
 
-        if (!empty ($this->id)) {
-            // Get entry from db
-            $entry = static::get ($this->id);
-            
-            // Can't get entry from db
-            if (empty ($entry)) {
-                Message::error ("Model save: can't get entry from DB with id '{$this->id}'");
-                return false;
-            }
+        // Only entrys from DB has ID's
+        if(!empty($this->id)) {
+            $entry = static::get($this->id) or die("Can't get entry with id = {$this->id}");
+            $change = [];
 
-            // Get object fields with values
-            $fields = get_object_vars ($this);
-            $changes = [];
-
-            // If object do not match with entry from db, write it down
-            foreach ($fields as $key => $value) {
-                if ($entry->$key != $value) {
-                    $changes[$key] = $value;
+            // Check for 
+            foreach($this as $key => $value) {
+                if ($entry->$key !== $value) {
+                    $change[$key] = $value;
                 }
             }
 
-            $query = "UPDATE %s SET %s WHERE `id` = %s";
+            if (empty($change)) {
+                return;
+            }
 
-            // Transform assoc array to string like `key` = 'value', `key2` = 'value2' ... 
-            $insert = implode (', ', array_map (
-                function ($v, $k) { return sprintf ("`%s` = '%s'", $k, $v); },
-                $changes,
-                array_keys ($changes)
+            // Format input data as `key1` = ?, `key2` = ?...
+            $data = implode(',', array_map(
+                function ($v) { return sprintf("`%s` = ?", $v); },
+                array_keys($change)
             ));
-            
-            $link->query ($query, $link->prefix.static::$table, $insert, $this->id);
-        } else {
-            $link->insert (static::$table, get_object_vars ($this));
+
+            $sql = sprintf("UPDATE %s SET %s WHERE `id` = %s",
+                $pdo->prefix(static::$table),
+                $data,
+                $this->id
+            );
+
+            $pdo->query($sql, array_values($change));
+        }
+        else {
+            $input = get_object_vars($this);
+            $keys = implode(', ', array_map(
+                function ($v) { return sprintf("`%s`", $v); },
+                array_keys($input)
+            ));
+            $values = array_values($input);
+
+            $sql = sprintf("INSERT INTO `%s` (%s) VALUES (%s)",
+                $pdo->prefix(static::$table),
+                $keys,
+                str_repeat("?, ", count($input) - 1)."?"
+            );
+
+            $pdo->query($sql, $values);
         }
     }
 
-    /**
-     * Deletes selected object
-     * In case of error, returns false
-     * 
-     * @return void|bool
-     */
-    public function delete () {
-        $link = new Connection ();
-        $result = $link->delete (static::$table, ["id = {$this->id}"]);
 
-        return $result;
+    /**
+     * Use $args array to fill object's fields
+     * 
+     * @example $article = new Article();
+     * $article->set([
+     *      'author' => 'John',
+     *      'title' => 'Using set method to models',
+     *      'date' => date()
+     * ]);
+     * 
+     * @param array $args associative array like field => value
+     * 
+     * @return void
+     */
+    public function set (array $args): void
+    {
+        foreach ($args as $key => $value) {
+            $this->$key = $value;
+        }
     }
 }

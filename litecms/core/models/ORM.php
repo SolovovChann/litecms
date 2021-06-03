@@ -3,7 +3,6 @@
 namespace Litecms\Core\Models;
 
 use Litecms\Core\Models\Connection;
-use const Litecms\Config\Connection\TablePrefix;
 
 class ORM
 {
@@ -21,12 +20,14 @@ class ORM
      * 
      * @return string
      */
-    public static function date (string $field, $null = false, $autonow = false) {
-        $format = ($autonow === true)
-        ? ORM::format ($null, "CURRENT_TIMESTAMP")
-        : ORM::format ($null, null);
+    public static function date (string $field, bool $null = false, bool $autonow = false) {
+        $sql = ($autonow === true)
+        ? "`{$field}` DATETIME %s DEFAULT CURRENT_TIMESTAMP"
+        : "`{$field}` DATETIME %s";
 
-        $result = sprintf ("`%s` TIMESTAMP %s", $field, $format);
+        $format = ORM::format ($null, null);
+        $result = sprintf ($sql, $format);
+
         return $result;
     }
 
@@ -46,10 +47,10 @@ class ORM
         if ($onUpdate === null) {
             $onUpdate = ORM::nothing;
         }
-        // author INT(15), FOREIGN KEY (author) REFERENCES lcms_users(`id`) ON DELETE CASCADE ON UPDATE RESTRICT
+        $pdo = new Connection;
         $result = sprintf ('`%1$s` INT(15), FOREIGN KEY (%1$s) REFERENCES %2$s(`id`) ON DELETE %3$s ON UPDATE %4$s',
             $field,
-            TablePrefix.$table,
+            $pdo->prefix($table),
             $onDelete,
             $onUpdate
         );
@@ -69,7 +70,7 @@ class ORM
     
         $default = ($default === null)
         ? ''
-        : sprintf (" DEFAULT %s", $default);
+        : sprintf (" DEFAULT '%s'", $default);
     
         return sprintf ("%s%s", $null, $default);
     }
@@ -93,17 +94,17 @@ class ORM
     /**
      * Get all fields and create table in database
      * 
-     * @param $table – Name of table
-     * @param $fields – Array of fields
+     * @param $name – table's name 
+     * @param $fields – array of fields
      * 
      * @return void
      */
-    public static function migrate (string $table, $fields) {
+    public static function migrate (string $name, $fields) {
         // Add ID field
         array_unshift ($fields, ORM::primary ());
-
-        $link = new Connection;
-        $link->createTable ($table, $fields);
+        
+        $pdo = new Connection;
+        $pdo->table ($name, $fields);
     }
 
     /**
