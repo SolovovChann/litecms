@@ -169,20 +169,18 @@ class Router
      */
     public static function redirect (string $to)
     {
-        $commonValues = [
+        $special = [
             'self' => $_SERVER['REQUEST_URI'],
             'home' => '/',
             'parent' => explode ('/', $_SERVER['REQUEST_URI'])[1],
-            'back' => 'javascript://history.go(-1)',
+            'back' => 'javascript://history.back()',
         ];
 
-        if (array_key_exists ($to, $commonValues) === true) {
-            $to = $commonValues[$to];
-            header ('Location: '.$to);
-            return;
-        }
+        $url = (array_key_exists ($to, $special) === true)
+        ? $special[$to]
+        : Router::url ($to);
 
-        $url = Router::url ($to);
         header ('Location: '.$url);
+        die("Переадресация на '{$to}' не сработала");
     }
 }
