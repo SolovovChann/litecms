@@ -58,71 +58,7 @@ class Misc
         $old = new \DateTime ($input, $timestamp);
         $diff = $now->diff($old);
 
-        if ($diff->m > 3) {
-            return $old->format("d.m.Y. H:i");
-        }
-
-
-        if ($diff->m != 0 and $diff->m <= 3) {
-            switch ($diff->m) {
-                case 1:
-                    return "месяц назад";
-                    break;
-                
-                case 2:
-                case 3:
-                case 4:
-                    return sprintf("%s месяца назад", $diff->m);
-
-                default:
-                    return sprintf ("%s месяцев назад", $diff->m);
-                    break;
-            }
-        }
-
-
-        if ($diff->d != 0 and $diff->d <= 7) {
-            switch ($diff->d) {
-                case 1:
-                    return "вчера";
-                    break;
-                
-                case 2:
-                    return "позавчера";
-                    break;
-
-                case 3:
-                case 4:
-                    return sprintf("%s дня назад", $diff->d);
-                    break;
-
-                default:
-                    return sprintf("%s дней назад", $diff->d);
-                    break;
-            }
-        }
-
-
-        if ($diff->h != 0 and $diff->h <= 12) {
-            switch ($diff->h) {
-                case 1:
-                    return "час назад";
-                    break;
-                
-                case 2:
-                case 3:
-                case 4:
-                    return sprintf("%s часа назад", $diff->h);
-                    break;
-
-                default:
-                    return sprintf("Сегодня %s часов назад", $diff->h);
-                    break;
-            }
-        }
-
-
-        if ($diff->i != 0 and $diff->i <= 30) {
+        if ($diff->i <= 30 and empty($diff->d) and empty($diff->m) and empty($diff->y)) {
             switch ($diff->i) {
                 case (1 <= $diff->i and $diff->i < 5):
                     return "только что";
@@ -135,24 +71,10 @@ class Misc
                 case (10 <= $diff->i and $diff->i < 15):
                     return "10 минут назад";
                     break;
-                
-                case (15 <= $diff->i and $diff->i < 20):
-                    return "15 минут назад";
-                    break;
-                
-                case (20 <= $diff->i and $diff->i < 30):
-                    return "20 минут назад";
-                    break;
-                
-                case (30 <= $diff->i and $diff->i < 45):
-                    return "полчаса назад";
-                    break;
-                
-                default:
-                    return sprintf("%s минут назад", $diff->i);
-                    break;
             }
         }
+
+        return $old->format ("d F Y в H:i");
     }
 
     /**
