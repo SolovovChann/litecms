@@ -1,10 +1,19 @@
 <?php
 
-use Litecms\Utils\{Debug, Message};
-use Litecms\Core\{Request, Route, Controller};
+use Litecms\Utils\Message;
+use Litecms\Core\{Request, Route};
 
 
-function debug(...$values) { Debug::print(...$values); }
+/**
+ * Output values in pre tags
+ * 
+ * @param array $values List of values to be displayed
+ * @return void
+ */
+function debug(...$values) { 
+    if (empty($values)) return;
+    echo "<pre>", var_dump(...$values),"</pre>";
+ }
 
 /**
  * Redirect to another page
