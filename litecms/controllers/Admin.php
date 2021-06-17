@@ -2,19 +2,20 @@
 
 namespace Litecms\Controllers;
 
-use Litecms\Core\{Application, Controller, Connection, Request, View};
+use Litecms\Core\{Application, Controller, Connection, Request, View, Route};
 use const Litecms\Config\Models;
 
 class Admin extends Controller
 {
     public static function default(Request $request)
     {
-        
         return View::extend($request, "markups/base.php", "admin/index.php", [
             'title' => 'Панель администратора',
             'models' => Models,
+            'routes' => Route::$routes,
         ]);
     }
+
 
     public static function create(Request $request, string $tableName)
     {
@@ -51,46 +52,11 @@ class Admin extends Controller
     public static function configurate(Request $request)
     {
         if ($request->method === 'POST' and !empty($request->post)) {
-            $settingsText = "<?php
+            if (Application::configurate($request->post) === false) {
+                message("error", "Не удалось создать файл настроек");
+                return redirect("self", $request);
+            }
 
-namespace Litecms\Config;
-
-// Warning! Disable on production
-const Debug = true;
-const Name = \"{$request->post['application_name']}\";
-const Timezone = \"UTF\";
-
-// Path to folders from document's root
-const Dirs = [
-    'models' => 'models',
-    'root' => 'litecms',
-    'static' => 'static',
-    'uploads' => 'uploads',
-
-    'templates' => [
-        'templates',
-    ],
-];
-
-// List of the installed applications.
-// Add your models into the END of the list
-const Models = [
-    'Litecms\User\User',
-    'Litecms\User\Group',
-];
-
-// Warning! Do not share your connection data to strangers!
-const Connection = [
-    'host' => '{$request->post['connection_host']}',
-    'username' => '{$request->post['connection_user']}',
-    'password' => '{$request->post['connection_password']}',
-    'database' => '{$request->post['connection_database']}',
-    'table_prefix' => '{$request->post['connection_prefix']}',
-];
-
-const SessionTime = 5;";
-            // Create settings file 
-            file_put_contents($_SERVER['DOCUMENT_ROOT']."/litecms/Settings.php", $settingsText);
             message("success", "Файл настроек успешно создан", "");
             sleep(10);
 
