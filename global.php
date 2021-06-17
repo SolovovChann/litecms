@@ -27,6 +27,7 @@ function redirect(string $to, Request $request = null) {
     $defaultKeys = [
         'self' => 'Refresh:1',
         'previous' => "Location: {$request->referer}",
+        'home' => 'Location: /',
     ];
 
     if ($request !== null and array_key_exists($to, $defaultKeys)) {

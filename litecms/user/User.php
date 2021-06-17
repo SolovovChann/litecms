@@ -41,8 +41,13 @@ class User extends Model
     public static function auth(string $email, string $password)
     {
         $user = self::filter('email = ?', [$email])[0];
+        if (empty($user)) {
+            message("error", "Пользователя $email не найдено");
+            return;
+        }
 
         if (password_verify($password, $user->password) === false) {
+            message("error", "Пароли не совпадают");
             return;
         }
     
@@ -119,7 +124,7 @@ class User extends Model
         $this->username = $username;
         $this->fullname = $fullname;
         $this->email = $email;
-        $this->password = $password;
+        $this->password = password_hash($password, PASSWORD_DEFAULT);
 
         $duplicate = self::filter("`username` = ? or `email` = ?", [$username, $email], 1);
         if (empty($duplicate) === false) {
@@ -128,5 +133,6 @@ class User extends Model
         }
 
         $this->save();
+        self::auth($this->email, $this->password);
     }
 }

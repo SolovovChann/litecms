@@ -1,5 +1,3 @@
-<?= debug($_POST) ?>
-
 <form action="" method="POST" id="configurate-form">
   <div class="form__group">
     <label for="application_name" class="form__label">Имя приложения</label>
@@ -16,17 +14,17 @@
 
     <div class="form__group">
       <label for="connection_user" class="form__label">Пользователь базы данных</label>
-      <input class="form__input" id="connection_user" name="connection_user" value="root" required type="text">
+      <input class="form__input" id="connection_user" name="connection_user" required type="text">
     </div>
 
     <div class="form__group">
       <label for="connection_password" class="form__label">Пароль базы данных</label>
-      <input class="form__input" id="connection_password" name="connection_password" placeholder="Надёжный и сильный" required type="password">
+      <input class="form__input" id="connection_password" name="connection_password" required type="password">
     </div>
 
     <div class="form__group">
       <label for="connection_database" class="form__label">Имя базы данных</label>
-      <input class="form__input" id="connection_database" name="connection_database" placeholder="litecms" required type="text">
+      <input class="form__input" id="connection_database" name="connection_database" required type="text">
     </div>
 
     <div class="form__group">
