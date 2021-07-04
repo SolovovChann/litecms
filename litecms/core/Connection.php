@@ -28,6 +28,9 @@ class Connection
         string $database = ConnCfg['database'],
         string $prefix = ConnCfg['table_prefix']
     ) {
+        $this->host = $host;
+        $this->user = $user;
+        $this->database = $database;
         $this->prefix = $prefix;
         $this->pdo = new \PDO ("mysql:dbname={$database};host={$host};charset=utf8mb4", $user, $password) or die($this->pdo->errorInfo());
     }

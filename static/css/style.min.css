@@ -288,6 +288,12 @@ body {
   display: block;
   width: 100%;
 }
+textarea.form__input {
+  min-width: 100%;
+  max-width: 100%;
+  min-height: 3em;
+  max-height: 15em;
+}
 .form__input {
   display: block;
   width: 100%;

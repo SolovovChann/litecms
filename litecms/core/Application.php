@@ -2,9 +2,7 @@
 
 namespace Litecms\Core;
 
-use Litecms\Core\{Route, Request, Connection};
-use Litecms\User\User;
-use Litecms\Utils\{Message, Debug};
+use Litecms\Core\{Route, Connection};
 use const Litecms\Config\{Models, Connection as ConnCfg};
 
 class Application
@@ -61,7 +59,7 @@ const SessionTime = 5;";
 
 
     /**
-     * Creaet database tables 
+     * Create database tables 
      * 
      * @return void
      */
@@ -77,8 +75,7 @@ const SessionTime = 5;";
                 continue;
             }
 
-            $sql = sprintf("CREATE TABLE {$pdo->prefix($object::$table)} (%s)", implode(", ", $object->formTable()));
-            $pdo->query($sql);
+            $object->createTable();
         }
     }
 
