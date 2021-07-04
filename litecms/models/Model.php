@@ -6,8 +6,6 @@ use Litecms\Core\Connection;
 
 class Model
 {
-    public $id;
-
     public static $table;
     public static $verbose;
     public static $plural;
@@ -18,36 +16,34 @@ class Model
     /**
      * Get all model's objects from DB 
      * 
-     * @param int $limit = 50, how many entries will be returned. Use $limit = -1 to get all entries
-     * @param string $order = 'id', which field is used to order the entries
-     * @param bool $reverse = false, use reverse order
-     * @example Article::all(); // Get first 50 articles
-     * @example Article::all(-1) // Get all articles
-     * @example Article::all(-1, 'title') // Get all articles and sort it by title
-     * 
+     * @param array $params Array of paramethers, used for querying to DB
+     * @param int $params['limit'] How many entries will be returned
+     * @param string $params['order'] Which field is used to order the entries
+     * @param bool $params['reverse'] Use reversed order
      * @return array
      */
-    public static function all(
-        int $limit = 50,
-        string $order = "id",
-        bool $reverse = false
-    ): array {
-        $pdo = new Connection;
+    public static function all(array $params = []): array {
+        $limit = $params['limit'] ?? -1;
+        $order = $params['order'] ?? 'id';
+        $reverse = $params['reverse'] ?? false;
 
         $reverse = ($reverse === true)
         ? "DESC"
         : "ASC";
-
+        
+        $pdo = new Connection;
         $sql = sprintf("SELECT * FROM %s WHERE 1 ORDER BY `%s` %s",
             $pdo->prefix(static::$table),
             $order,
             $reverse,
         );
-        if ($limit !== -1) {
+
+        if ($limit > 0) {
             $sql .= " LIMIT {$limit}";
         }
-        
+    
         $result = $pdo->query($sql, [], get_called_class());
+
         return $result;
     }
 
@@ -55,35 +51,39 @@ class Model
     /**
      * Find models objects in DB that match the condition
      * 
-     * @param string $condition Filter condition 
+     * @param string $condition Filter condition
      * @param array $values Array of data, used in condition
-     * @param int $limit 
-     * @param string $order
-     * @param bool $reverse
-     * @example Article::filter("name LIKE ? AND age < ?", ["Jo%", 29]) // Get all users, whoes name starts with Jo and younger than 29 years.  
-     * @example Article::filter("name LIKE ? AND age < ?", ["Jo%", 29], 10, 'name', true) // Same result but set limit to 10 and reverse order by name
+     * @param array $params Array of paramethers, used for querying to DB
+     * @param int $params['limit'] How many entries will be returned
+     * @param string $params['order'] Which field is used to order the entries
+     * @param bool $params['reverse'] Use reversed order
      * @return array
      */
     public static function filter(
         string $condition,
         array $values = [],
-        int $limit = 50,
-        string $order = "id",
-        bool $reverse = false
+        array $params = []
     ): array {
+        $limit = $params['limit'] ?? -1;
+        $order = $params['order'] ?? 'id';
+        $reverse = $params['reverse'] ?? false;
+
         $pdo = new Connection;
 
         $reverse = ($reverse === true)
         ? "DESC"
         : "ASC";
 
-        $sql = sprintf("SELECT * FROM %s WHERE %s ORDER BY `%s` %s LIMIT %s",
+        $sql = sprintf("SELECT * FROM %s WHERE %s ORDER BY `%s` %s",
             $pdo->prefix(static::$table),
             $condition,
             $order,
             $reverse,
-            $limit
         );
+
+        if ($limit > 0) {
+            $sql .= " LIMIT {$limit}";
+        }
 
         $result = $pdo->query($sql, $values, get_called_class());
         return $result;
@@ -91,27 +91,43 @@ class Model
 
 
     /**
+     * Use object to form table in database
      * 
+     * @return void
      */
-    public function formTable()
+    public function createTable()
     {
         $table = [];
+        $table[] = "`id` int(11) not null primary key auto_increment";
+        $pdo = new Connection;
 
-        foreach ($this as $key => $value) {
-            if ($key === 'id') {
-                $table[] = "id int(11) not null primary key auto_increment";
-                continue;
+        foreach ($this->init() as $key => $value)
+        {
+            if ($value->datatype === 'foreign key') {
+                $column = "`{$key}` int(11), foreign key ({$key}) references {$pdo->prefix($value->reference::$table)}(id) ON DELETE {$value->ondelete} ON UPDATE {$value->onupdate}";
+            } else {
+                $column = "`{$key}` {$value->datatype}";
+
+                if ($value->max !== null) {
+                    $column .= "($value->max)";
+                }
+
+                if ($value->null !== null) {
+                    $column .= $value->null === true ? " null" : " not null";
+                }
+
+                if ($value->default !== null) {
+                    $column .= " default {$value->default}";
+                }
             }
-            $result = "{$key} varchar(1024)";
 
-            if ($value !== null) {
-                $result .= " DEFAULT {$value}";
-            }
-
-            $table[] = $result;
+            $table[] = $column;
         }
 
-        return $table;
+        $table = sprintf("create table if not exists %s (%s) ", $pdo->prefix(static::$table), implode(', ', $table));
+        $result = $pdo->query($table);
+
+        return $result;
     }
 
 
@@ -126,10 +142,7 @@ class Model
     {
         $pdo = new Connection;
         $result = $pdo->query(
-            "SELECT * FROM {$pdo->prefix(static::$table)} WHERE `id` = ?",
-            [
-                $id
-            ],
+            "SELECT * FROM {$pdo->prefix(static::$table)} WHERE `id` = ?", [$id],
             get_called_class()
         );
         $result = $result[0];
@@ -143,9 +156,7 @@ class Model
 
     public function __toString()
     {
-        return (isset(static::$plural))
-        ? static::$plural
-        : $this->id;
+        return $this->id;
     }
 
 
@@ -161,6 +172,17 @@ class Model
         $pdo->query("DELETE FROM {$pdo->prefix(static::$table)} WHERE `id` = ?", [
             $this->id
         ]);
+    }
+
+
+    /**
+     * Function, describes fields as Mysqli entitys
+     * 
+     * @return self
+     */
+    public function init()
+    {
+        return $this;
     }
 
 
@@ -211,6 +233,7 @@ class Model
             ));
             $values = array_values($input);
 
+            $this->createTable();
             $sql = sprintf("INSERT INTO `%s` (%s) VALUES (%s)",
                 $pdo->prefix(static::$table),
                 $keys,
@@ -225,16 +248,10 @@ class Model
     /**
      * Use $args array to fill object's fields
      * 
-     * @example $article = new Article();
-     * $article->set([
-     *      'author' => 'John',
-     *      'title' => 'Using set method to models',
-     *      'date' => date()
-     * ]);
-     * @param array $args associative array like field => value
+     * @param array $args Associative array like field => value
      * @return void
      */
-    public function set (array $args): void
+    public function set(array $args): void
     {
         foreach ($args as $key => $value) {
             $this->$key = $value;
