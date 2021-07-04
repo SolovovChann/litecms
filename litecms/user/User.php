@@ -3,6 +3,7 @@
 namespace Litecms\User;
 
 use Litecms\Models\Model;
+use Litecms\Models\Field;
 use const Litecms\Config\SessionTime;
 
 /**
@@ -14,15 +15,23 @@ class User extends Model
     public static $verbose = "Пользователь";
     public static $plural = "Пользователи";
 
-    public $username;
-    public $fullname;
-    public $bio;
-    public $creation_date = 'CURRENT_TIMESTAMP';
     protected $email;
     protected $password;
-    public $is_active;
-    public $is_superuser;
-    public $last_login;
+
+    public function init()
+    {
+        $this->username = new Field\StringField();
+        $this->fullname = new Field\StringField();
+        $this->bio = new Field\TextField();
+        $this->creation_date = new Field\DateField(['default' => 'CURRENT_TIMESTAMP']);
+        $this->email = new Field\StringField();
+        $this->password = new Field\StringField();
+        $this->is_active = new Field\IntField(['max' => 1]);
+        $this->is_superuser = new Field\IntField(['max' => 1]);
+        $this->last_login = new Field\DateField(['default' => 'CURRENT_TIMESTAMP']);
+
+        return $this;
+    }
 
     
     public function __toString()
@@ -76,7 +85,7 @@ class User extends Model
      */
     public static function getOnline(int $limit = 10)
     {
-        $users = self::filter("is_active = ?", [true]);    
+        $users = self::filter("is_active = ?", [true], ['limit' => $limit]);    
         return $users;
     }
 
@@ -117,6 +126,10 @@ class User extends Model
     /**
      * Register new user
      * 
+     * @param string $username
+     * @param string $fullname
+     * @param string $email
+     * @param string $password
      * @return self
      */
     public function signup(string $username, string $fullname, string $email, string $password)
@@ -125,8 +138,9 @@ class User extends Model
         $this->fullname = $fullname;
         $this->email = $email;
         $this->password = password_hash($password, PASSWORD_DEFAULT);
+        
+        $duplicate = self::filter("`username` = ? or `email` = ?", [$username, $email], ['limit' => 1]);
 
-        $duplicate = self::filter("`username` = ? or `email` = ?", [$username, $email], 1);
         if (empty($duplicate) === false) {
             message("error", "Пользователь с таким логином или паролем уже существует");
             redirect("404");
@@ -134,5 +148,7 @@ class User extends Model
 
         $this->save();
         self::auth($this->email, $this->password);
+
+        return $this;
     }
 }
