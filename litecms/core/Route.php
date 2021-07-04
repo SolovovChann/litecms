@@ -7,7 +7,7 @@ use const Litecms\Config\{Dirs, Debug};
 
 class Route
 {
-    private static $routes = [];
+    public static $routes = [];
 
     /**
      * Add new url to track list
