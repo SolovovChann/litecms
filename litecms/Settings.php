@@ -4,7 +4,7 @@ namespace Litecms\Config;
 
 // Warning! Disable on production
 const Debug = true;
-const Name = "Тестовый проект";
+const Name = "";
 const Timezone = "UTF";
 
 // Path to folders from document's root
@@ -28,11 +28,11 @@ const Models = [
 
 // Warning! Do not share your connection data to strangers!
 const Connection = [
-    'host' => 'localhost',
-    'username' => 'root',
-    'password' => 'root',
-    'database' => 'testdb',
-    'table_prefix' => 'lcms',
+    'host' => '',
+    'username' => '',
+    'password' => '',
+    'database' => '',
+    'table_prefix' => '',
 ];
 
 const SessionTime = 5;
