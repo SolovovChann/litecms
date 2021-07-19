@@ -28,7 +28,7 @@ class Route
 
 
     /**
-     * Initialize routing
+     * Initialize routing system
      * 
      * @return void
      */
@@ -62,6 +62,9 @@ class Route
     }
 
 
+    /**
+     * Throw 404 page
+     */
     public static function notFound(Request $request)
     {
         if (Debug !== true) {
@@ -73,7 +76,11 @@ class Route
 
 
     /**
-     * Get url by controller's method
+     * Get url by it's handler class's method.
+     * @param string $controller Controller's class name
+     * @param string $method Controller's method name
+     * @param array $arguments If method contains arguments, pass it directly in this array
+     * @return string
      */
     public static function url(string $controller, string $method, array $arguments = [])
     {

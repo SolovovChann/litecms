@@ -5,7 +5,7 @@ use Litecms\Core\{Request, Route};
 
 
 /**
- * Output values in pre tags
+ * Output values in pre tags via var_dump() functiob
  * 
  * @param array $values List of values to be displayed
  * @return void
@@ -16,7 +16,7 @@ function debug(...$values) {
  }
 
 /**
- * Redirect to another page
+ * Send header for redirect to another page
  * 
  * @param Request $request Request class's object
  * @param string $to Destination page's URL.
@@ -45,6 +45,15 @@ function redirect(string $to, Request $request = null) {
 }
 
 
+/**
+ * Creates and stores new message.
+ * Same as creating new Message object. See Litecms\Utils\Message for more information
+ * 
+ * @param string $type Message's type. Use one of default values: debug, error, info, success, warning;
+ * @param string $message Text, to be shown
+ * @param string $title. All messages starts with title in bold tags. Also you can pass empty string
+ * @return void
+ */
 function message(string $type, string $message, $title = "Ошибка!") { 
     $default = [
         'debug' => 'message-debug',
@@ -61,11 +70,24 @@ function message(string $type, string $message, $title = "Ошибка!") {
 }
 
 
+/**
+ * Get url by it's handler class's method.
+ * @param string $controller Controller's class name
+ * @param string $method Controller's method name
+ * @param array $arguments If method contains arguments, pass it directly in this array
+ * @return string
+ */
 function url(string $controller, string $method, array $arguments = []) {
     return Route::url($controller, $method, $arguments);
 }
 
 
+/**
+ * Find registred model by table 
+ * 
+ * @param string $table Model's table
+ * @return string Returns moldel's name as a string
+ */
 function getModelByTable(string $table) {
     foreach (Litecms\Config\Models as $model) {
         if ($model::$table === $table) {

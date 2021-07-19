@@ -36,18 +36,22 @@ class Connection
     }
 
 
+    /**
+     * Output connection error as ready HTML string
+     * @param PDOStatement $sth Result that cause error 
+     */
     public function printError(\PDOStatement $sth)
     {
         $error = $sth->errorInfo();
         return sprintf("<strong>Connection error! {$error[1]}</strong>: {$error[2]}");
     }
 
+
     /**
      * Create new table in DB using fields
      * 
      * @param string $name, name of table
      * @param array $fields, array of fields, describes columns
-     * 
      * @return void
      */
     public function table(string $name, array $fields): void
@@ -70,10 +74,9 @@ class Connection
 
 
     /**
-     * Get table with prefix
+     * Get full table name with prefix
      * 
      * @param string $table
-     * 
      * @return string
      */
     public function prefix(string $table): string
@@ -89,8 +92,7 @@ class Connection
      * @param string $sql – sql string. Replace data to escape to question mark 
      * @param array $arguments – list of arguments. Every question mark in sql string will be replaces with appropriate element of array
      * @param string $fetchMode = PDO::FETCH_ASSOC – type of return result. Pass class name to return result as object
-     * 
-     * @return mixed
+     * @return array|object
      */
     public function query(
         string $sql,
